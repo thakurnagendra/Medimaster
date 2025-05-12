@@ -346,7 +346,7 @@ class _AgentWiseBillingScreenState extends State<AgentWiseBillingScreen> {
                         color: Colors.grey[300],
                       ),
                       // Total
-                      Container(
+                      SizedBox(
                         width: 90,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

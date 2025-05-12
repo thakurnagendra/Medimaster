@@ -228,7 +228,7 @@ class _AgentWiseSummaryScreenState extends State<AgentWiseSummaryScreen> {
                 ),
                 trailing: Text(
                   'NPR ${numberFormat.format(agent.recieptAmount)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppConstantColors.labAccent,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,

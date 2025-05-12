@@ -332,7 +332,7 @@ class _LabReportMenuCreditListScreenState
                 ),
                 Text(
                   currencyFormat.format(credit.totalCredit),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppConstantColors.labAccent,
                     fontSize: 12,
                   ),
@@ -522,7 +522,7 @@ class _LabReportMenuCreditListScreenState
     return creditData.where((credit) {
       return credit.pName.toLowerCase().contains(query) ||
           credit.pCode.toLowerCase().contains(query) ||
-          (credit.pMobile?.toLowerCase().contains(query) ?? false);
+          (credit.pMobile.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
