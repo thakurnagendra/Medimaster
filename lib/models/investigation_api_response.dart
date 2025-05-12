@@ -265,6 +265,7 @@ class InvestigationItem {
       'date': bDate ?? DateTime.now().toString().split(' ')[0],
       'bsDate': bMiti ?? '',
       'status': getStatusString(),
+      'printId': printId,
     };
   }
 

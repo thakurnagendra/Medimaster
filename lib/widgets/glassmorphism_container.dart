@@ -35,17 +35,17 @@ class GlassmorphismContainer extends StatelessWidget {
         height: height,
         padding: padding,
         decoration: BoxDecoration(
-          color: AppConstantColors.white.withOpacity(opacity),
+          color: AppConstantColors.white.withValues(alpha: (opacity * 255).toDouble()),
           borderRadius: borderRadius,
           border:
               border ??
               Border.all(
-                color: AppConstantColors.white.withOpacity(0.3),
+                color: AppConstantColors.white.withValues(alpha: 77.0), // 0.3 * 255 ≈ 77
                 width: 1.5,
               ),
           boxShadow: [
             BoxShadow(
-              color: AppConstantColors.black.withOpacity(0.2),
+              color: AppConstantColors.black.withValues(alpha: 51.0), // 0.2 * 255 ≈ 51
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -56,8 +56,8 @@ class GlassmorphismContainer extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppConstantColors.white.withOpacity(0.5),
-                  AppConstantColors.white.withOpacity(0.2),
+                  AppConstantColors.white.withValues(alpha: 128.0), // 0.5 * 255 ≈ 128
+                  AppConstantColors.white.withValues(alpha: 51.0), // 0.2 * 255 ≈ 51
                 ],
               ),
         ),

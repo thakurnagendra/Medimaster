@@ -1,6 +1,6 @@
 class ApiConfig {
   // Use UAT environment
-  static const String baseUrl = 'https://uat.medimastererp.com/api/mobileapp';
+  static const String baseUrl = 'https://medimastererp.com/api/mobileapp';
   // For production use:
   // static const String baseUrl = 'https://medimastererp.com/api/mobileapp';
 
@@ -23,7 +23,8 @@ class ApiConfig {
   // Patient endpoints
   static const String creditList = '/Patient/CreditList';
   static const String getClientWiseBillings = '/Lab/GetClientWiseBillings';
-
+  static const String reportPdf = '/Report/LabReportPdf';
+  static const String sendReport = '/Report/SendReport';
   // Add other endpoints here as needed
   // Example:
   // static const String updateProfile = '/User/update';

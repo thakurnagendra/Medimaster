@@ -5,7 +5,7 @@ import 'package:medimaster/controllers/ipd_controllers/ipd_transaction_controlle
 
 class IpdTransactionScreen extends GetView<IpdTransactionController> {
   @override
-  IpdTransactionController controller = Get.put(IpdTransactionController());
+  final IpdTransactionController controller = Get.put(IpdTransactionController());
   IpdTransactionScreen({super.key});
 
   final List<String> tabs = [

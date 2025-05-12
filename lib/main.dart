@@ -9,32 +9,33 @@ import 'package:medimaster/controllers/auth_controllers/signin_controllers.dart'
 import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/services/connectivity_service.dart';
 import 'package:medimaster/services/back_button_service.dart';
+import 'package:medimaster/utils/logger.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  print('App initializing...');
+  Logger.i('App initializing...');
   await GetStorage.init();
-  print('GetStorage initialized');
+  Logger.i('GetStorage initialized');
 
   // Initialize controllers
   Get.put(GetStorage());
-  print('GetStorage registered in GetX');
+  Logger.i('GetStorage registered in GetX');
 
   // Register ApiService as permanent
   Get.put(ApiService(), permanent: true);
-  print('ApiService registered in GetX');
+  Logger.i('ApiService registered in GetX');
 
   // Register SignInController as permanent (for token refresh)
   Get.put(SignInController(), permanent: true);
-  print('SignInController registered in GetX');
+  Logger.i('SignInController registered in GetX');
 
   // Register MainController as permanent (keep in memory)
   Get.put(MainController(), permanent: true);
-  print('MainController registered in GetX');
+  Logger.i('MainController registered in GetX');
 
   // Register BackButtonService for handling app exit confirmations
   Get.put(BackButtonService(), permanent: true);
-  print('BackButtonService registered in GetX');
+  Logger.i('BackButtonService registered in GetX');
 
   // Initialize connectivity service
   await Get.putAsync(() async => await ConnectivityService().init());
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('Building MyApp widget');
+    Logger.i('Building MyApp widget');
     return ActivityTrackingWrapper(
       child: GetMaterialApp(
         title: 'MediMaster',
@@ -91,7 +92,7 @@ class _ActivityTrackingWrapperState extends State<ActivityTrackingWrapper> {
           final signInController = Get.find<SignInController>();
           signInController.updateLastActivityTime();
         } catch (e) {
-          print('Error updating activity time: $e');
+          Logger.e('Error updating activity time', e);
         }
       },
       child: widget.child,

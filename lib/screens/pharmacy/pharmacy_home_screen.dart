@@ -11,9 +11,8 @@ class PharmacyHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get reference to the main controller to access module state if needed
-    final MainController mainController = Get.find<MainController>();
-
+    // No need to get reference to the main controller since it's not used
+    
     return Container(
       color: AppConstantColors.pharmacyBackground,
       padding: const EdgeInsets.all(16.0),
@@ -72,7 +71,7 @@ class PharmacyHomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppConstantColors.grey.withOpacity(0.1),
+              color: AppConstantColors.grey.withValues(alpha: 26),
               spreadRadius: 1,
               blurRadius: 2,
               offset: const Offset(0, 1),
@@ -130,7 +129,7 @@ class PharmacyHomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppConstantColors.grey.withOpacity(0.1),
+            color: AppConstantColors.grey.withValues(alpha: 26),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -173,7 +172,7 @@ class PharmacyHomeScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 26),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -241,7 +240,7 @@ class PharmacyHomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppConstantColors.grey.withOpacity(0.1),
+            color: AppConstantColors.grey.withValues(alpha: 26),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -302,7 +301,7 @@ class PharmacyHomeScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppConstantColors.pharmacyAccent.withOpacity(0.1),
+              color: AppConstantColors.pharmacyAccent.withValues(alpha: 26),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -347,7 +346,7 @@ class PharmacyHomeScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 26),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -395,7 +394,7 @@ class PharmacyHomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppConstantColors.grey.withOpacity(0.1),
+            color: AppConstantColors.grey.withValues(alpha: 26),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -442,9 +441,9 @@ class PharmacyHomeScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppConstantColors.error.withOpacity(0.05),
+        color: AppConstantColors.error.withValues(alpha: 26),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppConstantColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppConstantColors.error.withValues(alpha: 39)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -853,6 +853,77 @@ class ApiService {
     }
     throw ApiException(message: 'Network error occurred', statusCode: 500);
   }
+
+  // Method to get the lab report PDF URL
+  Future<dynamic> getLabReportPdfUrl(int printId, {int groupId = 0}) async {
+    try {
+      // For PDF files, we need to use direct http client to get binary data
+      final url = Uri.parse('${ApiConfig.baseUrl}/Report/LabReportPdf?id=$printId&groupId=$groupId');
+      print('Fetching PDF directly from: $url');
+      
+      final headers = _getAuthHeaders();
+      // Add specific headers for PDF acceptance
+      headers['Accept'] = 'application/pdf';
+      
+      try {
+        // Try direct HTTP request for binary PDF data
+        final http.Response response = await http.get(url, headers: headers);
+        
+        if (response.statusCode == 200) {
+          // Check if the content type indicates it's a PDF
+          final contentType = response.headers['content-type'] ?? '';
+          print('PDF response content type: $contentType');
+          
+          if (contentType.contains('application/pdf')) {
+            print('Received direct PDF data: ${response.bodyBytes.length} bytes');
+            // Return raw PDF bytes
+            return response.bodyBytes;
+          } else {
+            // If not a PDF, it might be JSON or other format, return the string
+            print('Received non-PDF response, length: ${response.body.length}');
+            return response.body;
+          }
+        } else {
+          print('PDF fetch error: ${response.statusCode} - ${response.body}');
+          return null;
+        }
+      } catch (e) {
+        print('Direct PDF download error: $e, falling back to API service');
+        // Fall back to standard API get method if direct HTTP fails
+        final response = await get(
+          '/Report/LabReportPdf?id=$printId&groupId=$groupId',
+        );
+        
+        print('Fallback API response type: ${response.runtimeType}');
+        return response;
+      }
+    } catch (e) {
+      print('Error fetching lab report PDF: $e');
+      return null;
+    }
+  }
+
+  // Get raw PDF data with authenticated HTTP request
+  Future<http.Response> getRawPdf(int printId, int groupId) async {
+    try {
+      // Use Uri.https for secure connection
+      final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.reportPdf}?id=$printId&groupId=$groupId');
+      
+      // Get auth headers with token
+      final headers = _getAuthHeaders();
+      headers['Accept'] = 'application/pdf, application/json';
+      
+      print('Making authenticated request for PDF: $url');
+      final response = await http.get(url, headers: headers);
+      
+      print('Raw PDF response status: ${response.statusCode}, contentType: ${response.headers['content-type']}');
+      return response;
+    } catch (e) {
+      print('Error in raw PDF request: $e');
+      // Return an error response
+      return http.Response('Request failed: $e', 500);
+    }
+  }
 }
 
 // Custom exception for API errors

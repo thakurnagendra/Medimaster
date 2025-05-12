@@ -17,11 +17,6 @@ class LabTransactionScreen extends StatelessWidget {
       LabTransactionController(),
     );
 
-    // Reactive variables for filters
-    final RxString searchQuery = ''.obs;
-    final RxInt expandedCardIndex = RxInt(-1);
-    final RxBool showFilters = false.obs;
-
     return Scaffold(
       backgroundColor: AppConstantColors.labBackground,
       body: SafeArea(
@@ -221,9 +216,9 @@ class LabTransactionScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 6 : 8),
             height: isSmallScreen ? 36 : 40,
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 26),
               borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
+              border: Border.all(color: Colors.green.withValues(alpha: 77)),
             ),
             child: TextButton.icon(
               onPressed: () {
@@ -267,7 +262,7 @@ class LabTransactionScreen extends StatelessWidget {
         horizontal: isSmallScreen ? 12 : 16,
         vertical: isSmallScreen ? 4 : 6,
       ),
-      color: Colors.white.withOpacity(0.95),
+      color: Colors.white.withValues(alpha: 243),
       child: Column(
         children: [
           // Date range filters in a more compact layout
@@ -318,7 +313,7 @@ class LabTransactionScreen extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
+                          color: Colors.grey.withValues(alpha: 26),
                           spreadRadius: 1,
                           blurRadius: 3,
                           offset: const Offset(0, 1),
@@ -343,7 +338,7 @@ class LabTransactionScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: Colors.indigo.withOpacity(0.1),
+                                          color: Colors.indigo.withValues(alpha: 26),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -378,7 +373,7 @@ class LabTransactionScreen extends StatelessWidget {
                         icon: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.indigo.withOpacity(0.1),
+                            color: Colors.indigo.withValues(alpha: 26),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
@@ -397,7 +392,7 @@ class LabTransactionScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors.indigo.withOpacity(0.1),
+                                color: Colors.indigo.withValues(alpha: 26),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(
@@ -431,7 +426,7 @@ class LabTransactionScreen extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
+                          color: Colors.grey.withValues(alpha: 26),
                           spreadRadius: 1,
                           blurRadius: 3,
                           offset: const Offset(0, 1),
@@ -455,7 +450,7 @@ class LabTransactionScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: Colors.purple.withOpacity(0.1),
+                                          color: Colors.purple.withValues(alpha: 26),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -489,7 +484,7 @@ class LabTransactionScreen extends StatelessWidget {
                         icon: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.purple.withOpacity(0.1),
+                            color: Colors.purple.withValues(alpha: 26),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
@@ -508,7 +503,7 @@ class LabTransactionScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors.purple.withOpacity(0.1),
+                                color: Colors.purple.withValues(alpha: 26),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Icon(
@@ -727,7 +722,7 @@ class LabTransactionScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey[100],
           borderRadius: BorderRadius.circular(isSmallScreen ? 6 : 8),
-          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 26)),
         ),
         child: Row(
           children: [
@@ -775,9 +770,9 @@ class LabTransactionScreen extends StatelessWidget {
         vertical: isSmallScreen ? 2 : 4,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 26),
         borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 77)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1189,9 +1184,9 @@ class LabTransactionScreen extends StatelessWidget {
         vertical: isSmallScreen ? 6 : 8,
       ),
       decoration: BoxDecoration(
-        color: AppConstantColors.labBackground.withOpacity(0.7),
+        color: AppConstantColors.labBackground.withValues(alpha: 243),
         border: Border(
-          bottom: BorderSide(color: Colors.green.withOpacity(0.2), width: 1),
+          bottom: BorderSide(color: Colors.green.withValues(alpha: 77), width: 1),
         ),
       ),
       child: Row(
@@ -1297,13 +1292,13 @@ class LabTransactionScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             side: isExpanded
                 ? BorderSide(
-                    color: Colors.green.withOpacity(0.5),
+                    color: Colors.green.withValues(alpha: 26),
                     width: 1.5,
                   )
                 : BorderSide.none,
           ),
           color: isExpanded
-              ? AppConstantColors.labBackground.withOpacity(0.3)
+              ? AppConstantColors.labBackground.withValues(alpha: 243)
               : Colors.white,
           child: Column(
             children: [
@@ -1362,7 +1357,7 @@ class LabTransactionScreen extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: Colors.green.withValues(alpha: 26),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1393,7 +1388,7 @@ class LabTransactionScreen extends StatelessWidget {
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               color: isExpanded
-                                  ? Colors.green.withOpacity(0.1)
+                                  ? Colors.green.withValues(alpha: 26)
                                   : Colors.grey[100],
                               shape: BoxShape.circle,
                             ),
@@ -1663,7 +1658,7 @@ class LabTransactionScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 26),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -1733,7 +1728,7 @@ class LabTransactionScreen extends StatelessWidget {
         margin: const EdgeInsets.only(right: 6),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 26),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

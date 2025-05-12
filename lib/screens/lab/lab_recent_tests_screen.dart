@@ -5,6 +5,7 @@ import 'package:medimaster/controllers/main_controller.dart';
 import 'package:medimaster/controllers/lab_controller.dart';
 import 'package:medimaster/widgets/top_app_bar.dart';
 import 'package:medimaster/services/api_service.dart';
+import 'package:medimaster/utils/pdf_viewer_util.dart';
 
 class LabRecentTestsScreen extends StatefulWidget {
   const LabRecentTestsScreen({super.key});
@@ -944,7 +945,7 @@ class _LabRecentTestsScreenState extends State<LabRecentTestsScreen> {
                       ),
                       const SizedBox(height: 8),
 
-                      // First row of action buttons
+                      // Action buttons - keep only the required ones
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -964,51 +965,61 @@ class _LabRecentTestsScreenState extends State<LabRecentTestsScreen> {
                               icon: Icons.description_outlined,
                               label: 'View Report',
                               color: Colors.teal,
-                              onTap: () {
+                              onTap: () async {
                                 // View report action
+                                if (test['printId'] != null) {
+                                  final int printId = int.tryParse(test['printId'].toString()) ?? 0;
+                                  print('Opening report with printId: $printId');
+                                  
+                                  if (printId > 0) {
+                                    try {
+                                      await PDFViewerUtil.viewLabReport(printId);
+                                    } catch (e) {
+                                      print('Error showing PDF: $e');
+                                      Get.snackbar(
+                                        'Error', 
+                                        'Failed to open report: ${e.toString()}',
+                                        snackPosition: SnackPosition.BOTTOM,
+                                        backgroundColor: Colors.red[100],
+                                        colorText: Colors.red[900],
+                                        duration: const Duration(seconds: 5),
+                                      );
+                                    }
+                                  } else {
+                                    Get.snackbar(
+                                      'Error', 
+                                      'Invalid report ID: $printId',
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      backgroundColor: Colors.red[100],
+                                      colorText: Colors.red[900],
+                                    );
+                                  }
+                                } else {
+                                  print('PrintId not available in test data: ${test['id']}');
+                                  Get.snackbar(
+                                    'Error', 
+                                    'Report not available for this test',
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.red[100],
+                                    colorText: Colors.red[900],
+                                  );
+                                }
                               },
                             ),
                             _buildActionButton(
-                              icon: Icons.print,
-                              label: 'Print',
-                              color: Colors.deepPurple,
-                              onTap: () {
-                                // Print report action
-                              },
-                            ),
-                            _buildActionButton(
-                              icon: Icons.email_outlined,
-                              label: 'Email',
+                              icon: Icons.send,
+                              label: 'Send Report',
                               color: Colors.orange,
                               onTap: () {
-                                // Send to email action
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Second row of action buttons
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.message,
-                              label: 'WhatsApp',
-                              color: Colors.green,
-                              onTap: () {
-                                // Send to WhatsApp action
-                              },
-                            ),
-                            _buildActionButton(
-                              icon: Icons.sms_outlined,
-                              label: 'SMS Notify',
-                              color: Colors.blue,
-                              onTap: () {
-                                // Notify by SMS action
+                                // Send report action
+                                Get.dialog(
+                                  Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: SendReportDialog(testData: test),
+                                  ),
+                                );
                               },
                             ),
                             _buildActionButton(
@@ -1016,7 +1027,7 @@ class _LabRecentTestsScreenState extends State<LabRecentTestsScreen> {
                               label: 'Notify',
                               color: Colors.amber,
                               onTap: () {
-                                // Notify by WhatsApp action
+                                // Notify action
                               },
                             ),
                             _buildActionButton(
@@ -1448,5 +1459,366 @@ class _LabRecentTestsScreenState extends State<LabRecentTestsScreen> {
       'Dec': '12',
     };
     return months[monthName] ?? '01';
+  }
+}
+
+class SendReportDialog extends StatefulWidget {
+  final Map<String, dynamic> testData;
+
+  const SendReportDialog({Key? key, required this.testData}) : super(key: key);
+
+  @override
+  State<SendReportDialog> createState() => _SendReportDialogState();
+}
+
+class _SendReportDialogState extends State<SendReportDialog> {
+  // Selected method (WhatsApp, SMS, Email)
+  String selectedMethod = 'WhatsApp';
+  
+  // Recipients selection states
+  bool sendToPatient = true;
+  bool sendToDoctor = false;
+  bool sendToClient = false;
+  bool sendToCustom = false;  // New custom recipient option
+  
+  // Track if dropdown is expanded
+  bool isDropdownExpanded = false;
+
+  // Controllers for input fields
+  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
+  final customNameController = TextEditingController();  // New controller for custom recipient
+
+  @override
+  void dispose() {
+    phoneController.dispose();
+    emailController.dispose();
+    customNameController.dispose();  // Dispose the new controller
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppConstantColors.labBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      // Make the entire dialog scrollable to fix overflow issues
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            const Center(
+              child: Text(
+                'Send Report',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // WhatsApp, SMS, Email options in horizontal row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildMethodOption('WhatsApp', Icons.message, Colors.green),
+                _buildMethodOption('SMS', Icons.sms, Colors.purple),
+                _buildMethodOption('Email', Icons.email, Colors.blue),
+              ],
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Phone number input for WhatsApp and SMS
+            if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS')
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: TextField(
+                  controller: phoneController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter phone number',
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      Icons.phone,
+                      color: selectedMethod == 'WhatsApp' ? Colors.green : Colors.purple,
+                    ),
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+            
+            // Email input for Email
+            if (selectedMethod == 'Email')
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter email address',
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      Icons.email,
+                      color: Colors.blue,
+                    ),
+                    hintStyle: TextStyle(color: Color(0xFFAAAAAA)),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+              ),
+            
+            const SizedBox(height: 20),
+            
+            // Dropdown header
+            InkWell(
+              onTap: () {
+                setState(() {
+                  isDropdownExpanded = !isDropdownExpanded;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Select Recipients',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Icon(
+                      isDropdownExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: Colors.grey[700],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Dropdown content
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: isDropdownExpanded ? 180 : 0,  // Increased height for the new option
+              curve: Curves.easeInOut,
+              child: Container(
+                color: Colors.white,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildRecipientCheckbox(
+                        'Send to Patient',
+                        'Patient: ${widget.testData['patientName']}',
+                        sendToPatient,
+                        (value) => setState(() => sendToPatient = value ?? false),
+                        Colors.blue,  // Set checkbox color to blue
+                      ),
+                      _buildRecipientCheckbox(
+                        'Send to Doctor',
+                        'Doctor: ${widget.testData['referredBy']}',
+                        sendToDoctor,
+                        (value) => setState(() => sendToDoctor = value ?? false),
+                        Colors.blue,  // Set checkbox color to blue
+                      ),
+                      _buildRecipientCheckbox(
+                        'Send to Client',
+                        'Client: ${widget.testData['clientName']}',
+                        sendToClient,
+                        (value) => setState(() => sendToClient = value ?? false),
+                        Colors.blue,  // Set checkbox color to blue
+                      ),
+                      // New custom recipient with text field
+                      _buildCustomRecipient(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    // Implement send functionality
+                    _sendReport();
+                    Get.back();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Send'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildMethodOption(String method, IconData icon, Color color) {
+    final bool isSelected = selectedMethod == method;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          selectedMethod = method;
+        });
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? color.withOpacity(0.2) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected 
+                ? Border.all(color: color, width: 2)
+                : Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? color : Colors.grey[600],
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            method,
+            style: TextStyle(
+              color: isSelected ? color : Colors.grey[800],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildRecipientCheckbox(
+    String title,
+    String subtitle,
+    bool value,
+    ValueChanged<bool?> onChanged,
+    Color checkboxColor, // New parameter for checkbox color
+  ) {
+    return CheckboxListTile(
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 12),
+        overflow: TextOverflow.ellipsis,
+      ),
+      value: value,
+      onChanged: onChanged,
+      dense: true,
+      controlAffinity: ListTileControlAffinity.leading,
+      activeColor: checkboxColor, // Set the active checkbox color
+    );
+  }
+  
+  // New method to build the custom recipient row
+  Widget _buildCustomRecipient() {
+    return Row(
+      children: [
+        // Checkbox
+        Checkbox(
+          value: sendToCustom,
+          onChanged: (value) {
+            setState(() {
+              sendToCustom = value ?? false;
+            });
+          },
+          activeColor: Colors.blue,
+        ),
+        // Text field
+        Expanded(
+          child: TextField(
+            controller: customNameController,
+            decoration: const InputDecoration(
+              hintText: 'Enter custom recipient',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              border: InputBorder.none,
+            ),
+            style: const TextStyle(fontSize: 14),
+            enabled: sendToCustom,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  void _sendReport() {
+    // Get selected recipients
+    List<String> recipients = [];
+    if (sendToPatient) recipients.add('Patient');
+    if (sendToDoctor) recipients.add('Doctor');
+    if (sendToClient) recipients.add('Client');
+    if (sendToCustom && customNameController.text.isNotEmpty) {
+      recipients.add(customNameController.text);
+    }
+    
+    // Get contact information based on selected method
+    String contactInfo = '';
+    if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS') {
+      contactInfo = phoneController.text.isNotEmpty 
+          ? ' to number: ${phoneController.text}' 
+          : '';
+    } else if (selectedMethod == 'Email') {
+      contactInfo = emailController.text.isNotEmpty 
+          ? ' to email: ${emailController.text}' 
+          : '';
+    }
+    
+    // Show a success message
+    Get.snackbar(
+      'Report Sent',
+      'Report sent via $selectedMethod$contactInfo for: ${recipients.join(", ")}',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green[100],
+      colorText: Colors.green[800],
+      duration: const Duration(seconds: 3),
+    );
+    
+    // Here you would implement the actual sending functionality
+    print('Sending report via $selectedMethod$contactInfo for: ${recipients.join(", ")}');
   }
 }

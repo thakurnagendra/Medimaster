@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:medimaster/screens/accounts/agent_wise_summary_screen.dart';
+import 'package:medimaster/constant/app_constant_colors.dart';
 
 class AccountsTransactionScreen extends StatelessWidget {
   const AccountsTransactionScreen({super.key});
@@ -20,6 +22,7 @@ class AccountsTransactionScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
+              _buildAgentWiseSummaryButton(),
               const SizedBox(height: 20),
               _buildSearchAndFilter(dateRange),
               const SizedBox(height: 20),
@@ -614,6 +617,25 @@ class AccountsTransactionScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAgentWiseSummaryButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: ElevatedButton.icon(
+        onPressed: () => Get.to(() => const AgentWiseSummaryScreen()),
+        icon: const Icon(Icons.people_alt),
+        label: const Text('Agent Wise Summary'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppConstantColors.accountsAccent,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
       ),
     );
   }
