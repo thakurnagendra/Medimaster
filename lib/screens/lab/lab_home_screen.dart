@@ -8,6 +8,8 @@ import 'package:medimaster/widgets/welcome_card.dart';
 import 'package:medimaster/screens/lab/lab_recent_tests_screen.dart';
 import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/utils/pdf_viewer_util.dart';
+import 'package:medimaster/models/send_report_model.dart';
+import 'package:medimaster/services/report_service.dart';
 
 class LabHomeScreen extends StatelessWidget {
   const LabHomeScreen({super.key});
@@ -1046,14 +1048,37 @@ class LabHomeScreen extends StatelessWidget {
                                           color: Colors.orange,
                                           onTap: () {
                                             // Send report action
-                                            Get.dialog(
-                                              Dialog(
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(16),
-                                                ),
-                                                child: SendReportDialog(testData: test),
-                                              ),
-                                            );
+                                            if (test['printId'] != null) {
+                                              final int printId = int.tryParse(test['printId'].toString()) ?? 0;
+                                              if (printId > 0) {
+                                                // Show the send report dialog instead of navigating to a new screen
+                                                Get.dialog(
+                                                  Dialog(
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(16),
+                                                    ),
+                                                    child: SendReportDialog(testData: test),
+                                                  ),
+                                                );
+                                              } else {
+                                                Get.snackbar(
+                                                  'Error', 
+                                                  'Invalid report ID: $printId',
+                                                  snackPosition: SnackPosition.BOTTOM,
+                                                  backgroundColor: Colors.red[100],
+                                                  colorText: Colors.red[900],
+                                                );
+                                              }
+                                            } else {
+                                              print('PrintId not available in test data: ${test['id']}');
+                                              Get.snackbar(
+                                                'Error', 
+                                                'Report not available for this test',
+                                                snackPosition: SnackPosition.BOTTOM,
+                                                backgroundColor: Colors.red[100],
+                                                colorText: Colors.red[900],
+                                              );
+                                            }
                                           },
                                         ),
                                         _buildActionButton(
@@ -1217,7 +1242,6 @@ class _SendReportDialogState extends State<SendReportDialog> {
   bool sendToPatient = true;
   bool sendToDoctor = false;
   bool sendToClient = false;
-  bool sendToCustom = false;  // New custom recipient option
   
   // Track if dropdown is expanded
   bool isDropdownExpanded = false;
@@ -1225,13 +1249,11 @@ class _SendReportDialogState extends State<SendReportDialog> {
   // Controllers for input fields
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
-  final customNameController = TextEditingController();  // New controller for custom recipient
 
   @override
   void dispose() {
     phoneController.dispose();
     emailController.dispose();
-    customNameController.dispose();  // Dispose the new controller
     super.dispose();
   }
 
@@ -1386,8 +1408,6 @@ class _SendReportDialogState extends State<SendReportDialog> {
                         (value) => setState(() => sendToClient = value ?? false),
                         Colors.blue,  // Set checkbox color to blue
                       ),
-                      // New custom recipient with text field
-                      _buildCustomRecipient(),
                     ],
                   ),
                 ),
@@ -1492,71 +1512,116 @@ class _SendReportDialogState extends State<SendReportDialog> {
     );
   }
   
-  // New method to build the custom recipient row
-  Widget _buildCustomRecipient() {
-    return Row(
-      children: [
-        // Checkbox
-        Checkbox(
-          value: sendToCustom,
-          onChanged: (value) {
-            setState(() {
-              sendToCustom = value ?? false;
-            });
-          },
-          activeColor: Colors.blue,
-        ),
-        // Text field
-        Expanded(
-          child: TextField(
-            controller: customNameController,
-            decoration: const InputDecoration(
-              hintText: 'Enter custom recipient',
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              border: InputBorder.none,
-            ),
-            style: const TextStyle(fontSize: 14),
-            enabled: sendToCustom,
-          ),
-        ),
-      ],
-    );
-  }
-  
-  void _sendReport() {
-    // Get selected recipients
-    List<String> recipients = [];
-    if (sendToPatient) recipients.add('Patient');
-    if (sendToDoctor) recipients.add('Doctor');
-    if (sendToClient) recipients.add('Client');
-    if (sendToCustom && customNameController.text.isNotEmpty) {
-      recipients.add(customNameController.text);
+  void _sendReport() async {
+    // Check if printId is available
+    if (widget.testData['printId'] == null) {
+      Get.snackbar(
+        'Error',
+        'Report ID is not available for this test',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+      return;
     }
     
-    // Get contact information based on selected method
-    String contactInfo = '';
+    final int printId = int.tryParse(widget.testData['printId'].toString()) ?? 0;
+    if (printId <= 0) {
+      Get.snackbar(
+        'Error',
+        'Invalid report ID: $printId',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+      return;
+    }
+
+    // Determine send method (1: Email, 2: WhatsApp, 3: SMS)
+    int sendMethod = 1; // Default to Email
+    if (selectedMethod == 'WhatsApp') {
+      sendMethod = 2;
+    } else if (selectedMethod == 'SMS') {
+      sendMethod = 3;
+    }
+    
+    // Get recipient address based on selected method
+    String recipientAddress = '';
     if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS') {
-      contactInfo = phoneController.text.isNotEmpty 
-          ? ' to number: ${phoneController.text}' 
-          : '';
+      recipientAddress = phoneController.text.trim();
+      if (recipientAddress.isEmpty && !sendToPatient && !sendToDoctor && !sendToClient) {
+        Get.snackbar(
+          'Error',
+          'Please enter a phone number or select at least one recipient',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900],
+        );
+        return;
+      }
     } else if (selectedMethod == 'Email') {
-      contactInfo = emailController.text.isNotEmpty 
-          ? ' to email: ${emailController.text}' 
-          : '';
+      recipientAddress = emailController.text.trim();
+      if (recipientAddress.isEmpty && !sendToPatient && !sendToDoctor && !sendToClient) {
+        Get.snackbar(
+          'Error',
+          'Please enter an email address or select at least one recipient',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900],
+        );
+        return;
+      }
     }
     
-    // Show a success message
-    Get.snackbar(
-      'Report Sent',
-      'Report sent via $selectedMethod$contactInfo for: ${recipients.join(", ")}',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green[100],
-      colorText: Colors.green[800],
-      duration: const Duration(seconds: 3),
-    );
-    
-    // Here you would implement the actual sending functionality
-    print('Sending report via $selectedMethod$contactInfo for: ${recipients.join(", ")}');
+    try {
+      // Create report model
+      final reportModel = SendReportModel(
+        id: printId,
+        sendMethod: sendMethod,
+        recipientAddress: recipientAddress,
+        usePatientContact: sendToPatient,
+        sendToClient: sendToClient,
+        sendToDoctor: sendToDoctor,
+      );
+      
+      // Get report service
+      final reportService = Get.put(ReportService());
+      
+      // Show loading indicator
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+      
+      // Send report
+      final success = await reportService.sendReport(reportModel);
+      
+      // Close loading indicator
+      Get.back();
+      
+      if (success) {
+        // Show success message
+        Get.snackbar(
+          'Report Sent',
+          'Report sent successfully via $selectedMethod',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green[100],
+          colorText: Colors.green[800],
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      Get.snackbar(
+        'Error',
+        'Failed to send report: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+        duration: const Duration(seconds: 5),
+      );
+    }
   }
 }

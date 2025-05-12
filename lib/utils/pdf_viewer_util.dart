@@ -8,6 +8,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:medimaster/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:medimaster/config/api_config.dart';
+import 'package:medimaster/screens/lab/send_report_screen.dart';
 
 class PDFViewerUtil {
   static final ApiService _apiService = Get.find<ApiService>();
@@ -376,10 +377,12 @@ class PDFScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Lab Report #$printId'),
         actions: [
+          // Add Send Report button
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.send),
+            tooltip: 'Send Report',
             onPressed: () {
-              // Implement share functionality if needed
+              Get.to(() => SendReportScreen(printId: printId));
             },
           ),
         ],
