@@ -15,9 +15,9 @@ class SendReportScreen extends StatefulWidget {
 class _SendReportScreenState extends State<SendReportScreen> {
   final TextEditingController _recipientController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   final ReportService _reportService = Get.put(ReportService());
-  
+
   // Default method is Email (1)
   int _selectedSendMethod = 1;
   bool _usePatientContact = true;
@@ -71,7 +71,7 @@ class _SendReportScreenState extends State<SendReportScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       Get.snackbar(
         'Error',
         'Failed to send report: ${e.toString()}',
@@ -98,11 +98,12 @@ class _SendReportScreenState extends State<SendReportScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter a recipient';
     }
-    
+
     switch (_selectedSendMethod) {
       case 1: // Email
         // Simple email validation
-        if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
+        if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+            .hasMatch(value)) {
           return 'Please enter a valid email address';
         }
         break;
@@ -114,7 +115,7 @@ class _SendReportScreenState extends State<SendReportScreen> {
         }
         break;
     }
-    
+
     return null;
   }
 
@@ -161,12 +162,12 @@ class _SendReportScreenState extends State<SendReportScreen> {
                         },
                       ),
                       RadioListTile<int>(
-                        title: Row(
+                        title: const Row(
                           children: [
                             // Use chat icon for WhatsApp instead
                             Icon(Icons.chat, color: Colors.green),
-                            const SizedBox(width: 8),
-                            const Text('WhatsApp'),
+                            SizedBox(width: 8),
+                            Text('WhatsApp'),
                           ],
                         ),
                         value: 2,
@@ -197,7 +198,7 @@ class _SendReportScreenState extends State<SendReportScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Recipient field
                 TextFormField(
                   controller: _recipientController,
@@ -206,9 +207,7 @@ class _SendReportScreenState extends State<SendReportScreen> {
                     hintText: _getHintText(),
                     border: const OutlineInputBorder(),
                     prefixIcon: Icon(
-                      _selectedSendMethod == 1 
-                          ? Icons.email 
-                          : Icons.phone,
+                      _selectedSendMethod == 1 ? Icons.email : Icons.phone,
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
@@ -218,7 +217,7 @@ class _SendReportScreenState extends State<SendReportScreen> {
                   validator: _validateRecipient,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Options
                 const Text(
                   'Options',
@@ -233,7 +232,8 @@ class _SendReportScreenState extends State<SendReportScreen> {
                     children: [
                       SwitchListTile(
                         title: const Text('Use Patient Contact'),
-                        subtitle: const Text('Use patient\'s contact information'),
+                        subtitle:
+                            const Text('Use patient\'s contact information'),
                         value: _usePatientContact,
                         onChanged: (value) {
                           setState(() {
@@ -265,7 +265,7 @@ class _SendReportScreenState extends State<SendReportScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Send button
                 SizedBox(
                   width: double.infinity,
@@ -294,4 +294,4 @@ class _SendReportScreenState extends State<SendReportScreen> {
       ),
     );
   }
-} 
+}

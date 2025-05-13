@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
-import 'package:medimaster/controllers/main_controller.dart';
 
 class PharmacyHomeScreen extends StatelessWidget {
   // Added moduleType property to clearly associate this screen with its module
@@ -12,7 +11,7 @@ class PharmacyHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // No need to get reference to the main controller since it's not used
-    
+
     return Container(
       color: AppConstantColors.pharmacyBackground,
       padding: const EdgeInsets.all(16.0),
@@ -443,7 +442,8 @@ class PharmacyHomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppConstantColors.error.withValues(alpha: 26),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppConstantColors.error.withValues(alpha: 39)),
+        border:
+            Border.all(color: AppConstantColors.error.withValues(alpha: 39)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

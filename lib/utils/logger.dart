@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// A utility class for logging that avoids using print statements in production
 class Logger {
   // Private constructor to prevent instantiation
@@ -33,9 +31,9 @@ class Logger {
     if (stackTrace != null) {
       print('Stack trace: $stackTrace');
     }
-    
+
     // In production, you might want to send errors to a reporting service
     // such as Firebase Crashlytics, Sentry, etc.
     // Example: FirebaseCrashlytics.instance.recordError(error, stackTrace);
   }
-} 
+}

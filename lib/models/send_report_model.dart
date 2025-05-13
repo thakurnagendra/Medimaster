@@ -19,7 +19,8 @@ class SendReportModel {
 
   // Convert model to JSON
   Map<String, dynamic> toJson() {
-    return {
+    // Base fields that are always included
+    final Map<String, dynamic> json = {
       'id': id,
       'sendMethod': sendMethod,
       'recipientAddress': recipientAddress,
@@ -28,6 +29,8 @@ class SendReportModel {
       'sendToClient': sendToClient,
       'sendToDoctor': sendToDoctor,
     };
+    
+    return json;
   }
 
   // Create a copy with modified fields

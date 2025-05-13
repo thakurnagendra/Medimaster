@@ -290,11 +290,29 @@ class ApiService {
         }
       } else {
         // For regular requests, use the standard approach
+        // Enhanced logging for debugging API discrepancies
+        final requestUrl = '${ApiConfig.baseUrl}$endpoint';
+        final requestBody = jsonEncode(body);
+
+        print('DETAILED REQUEST INFO:');
+        print('URL: $requestUrl');
+        print('Headers: ${headers.toString().replaceAll(RegExp(r'Bearer [A-Za-z0-9\._-]+'), 'Bearer [REDACTED]')}');
+        print('Body: $requestBody');
+
         response = await http.post(
-          Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+          Uri.parse(requestUrl),
           headers: headers,
-          body: jsonEncode(body),
+          body: requestBody,
         );
+
+        print('DETAILED RESPONSE INFO:');
+        print('Status Code: ${response.statusCode}');
+        print('Response Headers: ${response.headers}');
+        if (response.body.length < 1000) {
+          print('Response Body: ${response.body}');
+        } else {
+          print('Response Body Length: ${response.body.length} characters (too long to print)');
+        }
       }
 
       return _handleResponse(response, endpoint, 'POST', body, retryCount);

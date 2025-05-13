@@ -51,92 +51,107 @@ class PDFViewerUtil {
   // View PDF from print ID
   static Future<void> viewLabReport(int printId, {int groupId = 0}) async {
     _showLoading();
-    
+
     try {
       // Get the response from API
-      final dynamic response = await _apiService.getLabReportPdfUrl(printId, groupId: groupId);
-      
+      final dynamic response =
+          await _apiService.getLabReportPdfUrl(printId, groupId: groupId);
+
       if (response == null) {
         _showError("Failed to load report. Report data not found.");
         return;
       }
-      
+
       print('Response type: ${response.runtimeType}');
-      
+
       Uint8List? pdfBytes;
-      
+
       // Handle different response formats
       if (response is String) {
         // Log a sample of the response to debug
-        print('Response preview: ${response.length > 100 ? response.substring(0, 100) + "..." : response}');
-        
+        print(
+            'Response preview: ${response.length > 100 ? "${response.substring(0, 100)}..." : response}');
+
         // Try to detect if it's a direct base64 string first
         if (_isBase64(response)) {
           try {
             // Clean the base64 string of whitespace and possible prefix
             String cleanBase64 = _cleanBase64String(response);
             pdfBytes = base64Decode(cleanBase64);
-            print('Successfully decoded direct base64 data: ${pdfBytes.length} bytes');
+            print(
+                'Successfully decoded direct base64 data: ${pdfBytes.length} bytes');
           } catch (e) {
             print('Error decoding direct base64: $e');
           }
         }
-        
+
         // If base64 decoding failed, check if it's a direct PDF in binary form
-        if (pdfBytes == null && (response.startsWith('%PDF') || response.contains('\x00'))) {
+        if (pdfBytes == null &&
+            (response.startsWith('%PDF') || response.contains('\x00'))) {
           // Likely a direct PDF file in binary form
           pdfBytes = Uint8List.fromList(response.codeUnits);
           print('Detected binary PDF data: ${pdfBytes.length} bytes');
         }
-        
+
         // Check if it's JSON
-        if (pdfBytes == null && (response.trim().startsWith('{') || response.trim().startsWith('['))) {
+        if (pdfBytes == null &&
+            (response.trim().startsWith('{') ||
+                response.trim().startsWith('['))) {
           try {
             // Handle both object and array JSON formats
             dynamic jsonData;
             if (response.trim().startsWith('[')) {
               final List<dynamic> jsonArray = json.decode(response);
-              if (jsonArray.isNotEmpty && jsonArray[0] is Map<String, dynamic>) {
+              if (jsonArray.isNotEmpty &&
+                  jsonArray[0] is Map<String, dynamic>) {
                 jsonData = jsonArray[0];
               }
             } else {
               jsonData = json.decode(response);
             }
-            
+
             if (jsonData is Map) {
               // Print JSON keys for debugging
-              print('JSON keys: ${(jsonData as Map).keys.join(', ')}');
-              
+              print('JSON keys: ${(jsonData).keys.join(', ')}');
+
               // Extract base64 data from JSON
               // Check all common field names for base64 data
               final List<String> possibleFields = [
-                'data', 'pdfData', 'base64', 'content', 'encodedData', 
-                'fileData', 'file', 'document', 'pdf'
+                'data',
+                'pdfData',
+                'base64',
+                'content',
+                'encodedData',
+                'fileData',
+                'file',
+                'document',
+                'pdf'
               ];
-              
+
               String? base64Data;
-              
+
               for (String field in possibleFields) {
-                if (jsonData.containsKey(field) && 
-                    jsonData[field] != null && 
+                if (jsonData.containsKey(field) &&
+                    jsonData[field] != null &&
                     jsonData[field].toString().isNotEmpty) {
                   base64Data = jsonData[field].toString();
                   print('Found base64 data in field: $field');
                   break;
                 }
               }
-              
+
               // If no specific field was found, check if the entire JSON is the base64 string
               if (base64Data == null && _isBase64(jsonData.toString())) {
                 base64Data = jsonData.toString();
                 print('Using entire JSON as base64');
               }
-              
+
               if (base64Data != null && base64Data.isNotEmpty) {
                 try {
                   String cleanBase64 = _cleanBase64String(base64Data);
                   pdfBytes = base64Decode(cleanBase64);
-                  print('Successfully decoded base64 from JSON: ${pdfBytes.length} bytes');
+                  print(
+                      'Successfully decoded base64 from JSON: ${pdfBytes.length} bytes');
                 } catch (e) {
                   print('Error decoding base64 from JSON: $e');
                 }
@@ -144,7 +159,7 @@ class PDFViewerUtil {
             }
           } catch (e) {
             print('Error processing JSON response: $e');
-            
+
             // As a last resort, try to extract a base64 string directly from the response
             // This handles cases where the JSON might not be valid but contains base64 data
             final RegExp base64Pattern = RegExp(r'"([A-Za-z0-9+/=]{30,})"');
@@ -155,7 +170,8 @@ class PDFViewerUtil {
                 print('Extracted base64 using regex pattern');
                 String cleanBase64 = _cleanBase64String(extractedBase64);
                 pdfBytes = base64Decode(cleanBase64);
-                print('Successfully decoded extracted base64: ${pdfBytes.length} bytes');
+                print(
+                    'Successfully decoded extracted base64: ${pdfBytes.length} bytes');
               } catch (e) {
                 print('Error decoding extracted base64: $e');
               }
@@ -173,48 +189,60 @@ class PDFViewerUtil {
       } else if (response is Map) {
         // Print Map keys for debugging
         print('Map keys: ${response.keys.join(', ')}');
-        
+
         // Try to extract base64 string from Map
         final Map<dynamic, dynamic> responseMap = response;
         // Check all common field names for base64 data
         final List<String> possibleFields = [
-          'data', 'pdfData', 'base64', 'content', 'encodedData', 
-          'fileData', 'file', 'document', 'pdf'
+          'data',
+          'pdfData',
+          'base64',
+          'content',
+          'encodedData',
+          'fileData',
+          'file',
+          'document',
+          'pdf'
         ];
-        
+
         String? base64Data;
-        
+
         for (String field in possibleFields) {
-          if (responseMap.containsKey(field) && 
-              responseMap[field] != null && 
+          if (responseMap.containsKey(field) &&
+              responseMap[field] != null &&
               responseMap[field].toString().isNotEmpty) {
             base64Data = responseMap[field].toString();
             print('Found base64 data in field: $field');
             break;
           }
         }
-        
+
         if (base64Data != null && base64Data.isNotEmpty) {
           try {
             String cleanBase64 = _cleanBase64String(base64Data);
             pdfBytes = base64Decode(cleanBase64);
-            print('Successfully decoded base64 from Map: ${pdfBytes.length} bytes');
+            print(
+                'Successfully decoded base64 from Map: ${pdfBytes.length} bytes');
           } catch (e) {
             print('Error decoding base64 from Map: $e');
           }
         }
       }
-      
+
       // If we still don't have PDF bytes, try to download the PDF directly with auth
       if (pdfBytes == null || pdfBytes.isEmpty) {
         try {
           // Make a direct HTTP request to the endpoint with proper authorization
-          final http.Response directResponse = await _apiService.getRawPdf(printId, groupId);
-          
+          final http.Response directResponse =
+              await _apiService.getRawPdf(printId, groupId);
+
           if (directResponse.statusCode == 200) {
-            if (directResponse.headers['content-type']?.contains('application/pdf') ?? false) {
+            if (directResponse.headers['content-type']
+                    ?.contains('application/pdf') ??
+                false) {
               pdfBytes = directResponse.bodyBytes;
-              print('Successfully downloaded PDF directly: ${pdfBytes.length} bytes');
+              print(
+                  'Successfully downloaded PDF directly: ${pdfBytes.length} bytes');
             } else {
               // If not PDF, try to decode as JSON containing base64
               try {
@@ -226,7 +254,8 @@ class PDFViewerUtil {
                     if (value is String && _isBase64(value)) {
                       String cleanBase64 = _cleanBase64String(value);
                       pdfBytes = base64Decode(cleanBase64);
-                      print('Found base64 data in direct response JSON field: $key');
+                      print(
+                          'Found base64 data in direct response JSON field: $key');
                       break;
                     }
                   }
@@ -236,10 +265,12 @@ class PDFViewerUtil {
               }
             }
           } else {
-            print('Failed to download PDF directly: ${directResponse.statusCode}');
+            print(
+                'Failed to download PDF directly: ${directResponse.statusCode}');
             // Try one more fallback - if the direct response contains base64 data
             if (directResponse.statusCode == 401) {
-              print('Auth issue detected (401). Checking if initial response contains base64 data');
+              print(
+                  'Auth issue detected (401). Checking if initial response contains base64 data');
               // Look for long base64-like strings in the initial response
               if (response is String) {
                 final RegExp base64Pattern = RegExp(r'"([A-Za-z0-9+/=]{30,})"');
@@ -249,11 +280,12 @@ class PDFViewerUtil {
                     final extractedBase64 = match.group(1)!;
                     String cleanBase64 = _cleanBase64String(extractedBase64);
                     final testBytes = base64Decode(cleanBase64);
-                    
+
                     // Check if this looks like PDF data
                     if (testBytes.length > 100) {
                       pdfBytes = testBytes;
-                      print('Found likely PDF base64 data in original response: ${pdfBytes.length} bytes');
+                      print(
+                          'Found likely PDF base64 data in original response: ${pdfBytes.length} bytes');
                       break;
                     }
                   } catch (e) {
@@ -267,58 +299,60 @@ class PDFViewerUtil {
           print('Error downloading PDF directly: $e');
         }
       }
-      
+
       // If we still don't have valid PDF bytes, show error
       if (pdfBytes == null || pdfBytes.isEmpty) {
         _showError("Failed to process report data. Please try again.");
         return;
       }
-      
+
       // Validate PDF format (check for PDF header)
       if (!_isValidPDF(pdfBytes)) {
-        print('Warning: Data does not appear to be a valid PDF. First 20 bytes: ${pdfBytes.sublist(0, min(20, pdfBytes.length))}');
+        print(
+            'Warning: Data does not appear to be a valid PDF. First 20 bytes: ${pdfBytes.sublist(0, min(20, pdfBytes.length))}');
         // Continue anyway, since some PDFs might not have standard headers
       }
-      
+
       // Create a temporary file
       final Directory tempDir = await getTemporaryDirectory();
       final String tempPath = tempDir.path;
       final String filePath = '$tempPath/report_$printId.pdf';
-      
+
       // Write bytes to file
       final File file = File(filePath);
       await file.writeAsBytes(pdfBytes);
-      
+
       // Close loading dialog
       Get.back();
-      
+
       // Navigate to PDF viewer
       Get.to(() => PDFScreen(filePath: filePath, printId: printId));
     } catch (e) {
       print('Error viewing lab report: $e');
-      _showError("Failed to load report. Please try again later. Error: ${e.toString()}");
+      _showError(
+          "Failed to load report. Please try again later. Error: ${e.toString()}");
     }
   }
-  
+
   // Check if a string is likely base64 encoded
   static bool _isBase64(String str) {
     // Remove whitespace and any common prefixes
     final cleanStr = _cleanBase64String(str);
-    
+
     if (cleanStr.isEmpty || cleanStr.length % 4 != 0) {
       return false;
     }
-    
+
     // Check for base64 character set - allow for URL-safe base64 too
     final regex = RegExp(r'^[A-Za-z0-9+/\-_=]+$');
     return regex.hasMatch(cleanStr);
   }
-  
+
   // Clean base64 string by removing whitespace and common prefixes
   static String _cleanBase64String(String base64Str) {
     // Remove whitespace
     String cleanStr = base64Str.replaceAll(RegExp(r'\s+'), '');
-    
+
     // Remove common prefixes used in data URLs
     List<String> prefixes = [
       'data:application/pdf;base64,',
@@ -326,34 +360,34 @@ class PDFViewerUtil {
       'data:;base64,',
       'base64,',
     ];
-    
+
     for (String prefix in prefixes) {
       if (cleanStr.startsWith(prefix)) {
         cleanStr = cleanStr.substring(prefix.length);
         break;
       }
     }
-    
+
     // Replace URL-safe base64 characters with standard base64
     cleanStr = cleanStr.replaceAll('-', '+').replaceAll('_', '/');
-    
+
     // Adjust padding if needed
     while (cleanStr.length % 4 != 0) {
       cleanStr += '=';
     }
-    
+
     return cleanStr;
   }
-  
+
   // Check if data has a valid PDF header
   static bool _isValidPDF(Uint8List bytes) {
     if (bytes.length < 5) return false;
-    
+
     // Check for PDF header '%PDF-'
     final header = String.fromCharCodes(bytes.sublist(0, 5));
     return header == '%PDF-';
   }
-  
+
   // Get the minimum of two integers
   static int min(int a, int b) {
     return a < b ? a : b;
@@ -364,7 +398,7 @@ class PDFViewerUtil {
 class PDFScreen extends StatelessWidget {
   final String filePath;
   final int printId;
-  
+
   const PDFScreen({
     Key? key,
     required this.filePath,
@@ -409,4 +443,4 @@ class PDFScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

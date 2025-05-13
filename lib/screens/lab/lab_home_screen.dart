@@ -10,6 +10,8 @@ import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/utils/pdf_viewer_util.dart';
 import 'package:medimaster/models/send_report_model.dart';
 import 'package:medimaster/services/report_service.dart';
+import 'package:medimaster/utils/api_debug_util.dart';
+import 'package:medimaster/utils/logger.dart';
 
 class LabHomeScreen extends StatelessWidget {
   const LabHomeScreen({super.key});
@@ -1541,8 +1543,23 @@ class _SendReportDialogState extends State<SendReportDialog> {
     int sendMethod = 1; // Default to Email
     if (selectedMethod == 'WhatsApp') {
       sendMethod = 2;
+      // Show warning about potential WhatsApp configuration issue
+      Get.snackbar(
+        'WhatsApp Notice',
+        'WhatsApp messaging may not be configured on the server. If you encounter an error, please try Email or SMS instead.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.amber[100],
+        colorText: Colors.amber[900],
+        duration: const Duration(seconds: 3),
+      );
+      
+      // Log detailed information about WhatsApp selection
+      Logger.i('WhatsApp selected as send method (sendMethod=2)');
     } else if (selectedMethod == 'SMS') {
       sendMethod = 3;
+      Logger.i('SMS selected as send method (sendMethod=3)');
+    } else {
+      Logger.i('Email selected as send method (sendMethod=1)');
     }
     
     // Get recipient address based on selected method
@@ -1584,6 +1601,15 @@ class _SendReportDialogState extends State<SendReportDialog> {
         sendToDoctor: sendToDoctor,
       );
       
+      // Log the report model for debugging
+      Logger.i('Sending report with model: ${reportModel.toJson()}');
+      
+      // Run a direct HTTP test to compare with Swagger
+      if (sendMethod == 2) { // Only for WhatsApp method
+        Logger.i('Running direct HTTP test for WhatsApp send method');
+        await ApiDebugUtil.testSendReportApi(reportModel);
+      }
+      
       // Get report service
       final reportService = Get.put(ReportService());
       
@@ -1596,6 +1622,7 @@ class _SendReportDialogState extends State<SendReportDialog> {
       );
       
       // Send report
+      Logger.i('Sending report through ReportService');
       final success = await reportService.sendReport(reportModel);
       
       // Close loading indicator
@@ -1603,6 +1630,7 @@ class _SendReportDialogState extends State<SendReportDialog> {
       
       if (success) {
         // Show success message
+        Logger.i('Report sent successfully');
         Get.snackbar(
           'Report Sent',
           'Report sent successfully via $selectedMethod',
@@ -1611,6 +1639,8 @@ class _SendReportDialogState extends State<SendReportDialog> {
           colorText: Colors.green[800],
           duration: const Duration(seconds: 3),
         );
+      } else {
+        Logger.e('Report sending failed');
       }
     } catch (e) {
       // Show error message
