@@ -25,7 +25,6 @@ class ApiConfig {
   static const String getClientWiseBillings = '/Lab/GetClientWiseBillings';
   static const String reportPdf = '/Report/LabReportPdf';
   static const String sendReport = '/Report/SendReport';
-  // Add other endpoints here as needed
-  // Example:
-  // static const String updateProfile = '/User/update';
+  // Test endpoints
+  static const String getTestNameById = '/Investigation/GetTestNameById/';
 }

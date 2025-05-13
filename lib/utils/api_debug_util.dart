@@ -30,7 +30,7 @@ class ApiDebugUtil {
       }
       
       // Log the request details
-      final requestUrl = '${ApiConfig.baseUrl}${ApiConfig.sendReport}';
+      const requestUrl = '${ApiConfig.baseUrl}${ApiConfig.sendReport}';
       final requestBody = jsonEncode(reportModel.toJson());
       
       Logger.i('DIRECT HTTP TEST REQUEST:');

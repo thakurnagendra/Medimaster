@@ -7,8 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:medimaster/services/api_service.dart';
 import 'package:http/http.dart' as http;
-import 'package:medimaster/config/api_config.dart';
-import 'package:medimaster/screens/lab/send_report_screen.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PDFViewerUtil {
   static final ApiService _apiService = Get.find<ApiService>();
@@ -409,14 +409,34 @@ class PDFScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lab Report #$printId'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
         actions: [
-          // Add Send Report button
+          // Print button
           IconButton(
-            icon: const Icon(Icons.send),
-            tooltip: 'Send Report',
-            onPressed: () {
-              Get.to(() => SendReportScreen(printId: printId));
+            icon: const Icon(Icons.print),
+            tooltip: 'Print Report',
+            onPressed: () async {
+              final file = File(filePath);
+              if (await file.exists()) {
+                final bytes = await file.readAsBytes();
+                await Printing.layoutPdf(
+                  onLayout: (_) async => bytes,
+                  name: 'Lab Report',
+                );
+              }
+            },
+          ),
+          // Share button
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Report',
+            onPressed: () async {
+              await Share.shareXFiles(
+                [XFile(filePath)],
+                subject: 'Lab Report',
+              );
             },
           ),
         ],

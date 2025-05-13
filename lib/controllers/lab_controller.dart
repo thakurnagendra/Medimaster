@@ -4,6 +4,7 @@ import 'package:medimaster/services/investigation_service.dart';
 import 'package:medimaster/models/reference_data_model.dart';
 import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/config/api_config.dart';
+import 'package:medimaster/models/test_model.dart';
 
 class LabController extends GetxController {
   // We're keeping these for compatibility, but the dropdown is being removed from UI
@@ -65,6 +66,10 @@ class LabController extends GetxController {
   // Investigation service
   final InvestigationService _investigationService = InvestigationService();
   final ApiService _apiService;
+
+  // Test list
+  final RxList<TestModel> testList = <TestModel>[].obs;
+  final RxBool isLoadingTests = false.obs;
 
   LabController({ApiService? apiService})
       : _apiService = apiService ?? Get.find<ApiService>();
@@ -1162,5 +1167,27 @@ class LabController extends GetxController {
       doctorId: selectedDoctorId.value,
       agent: selectedAgentId.value,
     ); // Refresh data with new time period
+  }
+
+  // Fetch test list by patient ID
+  Future<void> fetchTestList(String billNo) async {
+    try {
+      isLoadingTests.value = true;
+      final response = await _apiService.get('${ApiConfig.getTestNameById}$billNo');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final List<dynamic> testData = response.data;
+        testList.value = testData.map((json) => TestModel.fromJson(json)).toList();
+      } else {
+        testList.clear();
+        throw Exception('Failed to load test list');
+      }
+    } catch (e) {
+      print('Error fetching test list: $e');
+      testList.clear();
+      rethrow;
+    } finally {
+      isLoadingTests.value = false;
+    }
   }
 }

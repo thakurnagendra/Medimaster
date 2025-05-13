@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -10,8 +11,8 @@ import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/utils/pdf_viewer_util.dart';
 import 'package:medimaster/models/send_report_model.dart';
 import 'package:medimaster/services/report_service.dart';
-import 'package:medimaster/utils/api_debug_util.dart';
 import 'package:medimaster/utils/logger.dart';
+import 'package:medimaster/screens/lab/test_list_screen.dart';
 
 class LabHomeScreen extends StatelessWidget {
   const LabHomeScreen({super.key});
@@ -989,14 +990,15 @@ class LabHomeScreen extends StatelessWidget {
                                     child: Row(
                                       children: [
                                         _buildActionButton(
-                                          icon: Icons.visibility,
+                                          icon: Icons.remove_red_eye,
                                           label: 'View Test',
                                           color: Colors.blue,
                                           onTap: () {
-                                            Get.toNamed(
-                                              '/lab/test-details',
-                                              arguments: {'testId': test['id']},
-                                            );
+                                            // Navigate to test list screen
+                                            Get.to(() => TestListScreen(
+                                                  billNo: test['b_BillNo'] ?? '', // Using bill number for API call
+                                                  patientName: test['b_Name'] ?? 'Unknown Patient',
+                                                ));
                                           },
                                         ),
                                         _buildActionButton(
@@ -1590,43 +1592,42 @@ class _SendReportDialogState extends State<SendReportDialog> {
       }
     }
     
-    try {
-      // Create report model
-      final reportModel = SendReportModel(
-        id: printId,
-        sendMethod: sendMethod,
-        recipientAddress: recipientAddress,
-        usePatientContact: sendToPatient,
-        sendToClient: sendToClient,
-        sendToDoctor: sendToDoctor,
-      );
-      
-      // Log the report model for debugging
-      Logger.i('Sending report with model: ${reportModel.toJson()}');
-      
-      // Run a direct HTTP test to compare with Swagger
-      if (sendMethod == 2) { // Only for WhatsApp method
-        Logger.i('Running direct HTTP test for WhatsApp send method');
-        await ApiDebugUtil.testSendReportApi(reportModel);
-      }
-      
-      // Get report service
-      final reportService = Get.put(ReportService());
-      
-      // Show loading indicator
-      Get.dialog(
-        const Center(
+    // Create report model
+    final reportModel = SendReportModel(
+      id: printId,
+      sendMethod: sendMethod,
+      recipientAddress: recipientAddress,
+      usePatientContact: sendToPatient,
+      sendToClient: sendToClient,
+      sendToDoctor: sendToDoctor,
+    );
+    
+    // Log the report model for debugging
+    Logger.i('Sending report with model: ${reportModel.toJson()}');
+    
+    // Show loading indicator
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(
           child: CircularProgressIndicator(),
         ),
-        barrierDismissible: false,
-      );
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      // Get report service
+      final reportService = Get.put(ReportService());
       
       // Send report
       Logger.i('Sending report through ReportService');
       final success = await reportService.sendReport(reportModel);
       
-      // Close loading indicator
-      Get.back();
+      // Close loading dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
       
       if (success) {
         // Show success message
@@ -1639,10 +1640,24 @@ class _SendReportDialogState extends State<SendReportDialog> {
           colorText: Colors.green[800],
           duration: const Duration(seconds: 3),
         );
+        // Close the send report dialog
+        Get.back();
       } else {
         Logger.e('Report sending failed');
+        Get.snackbar(
+          'Error',
+          'Failed to send report',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900],
+          duration: const Duration(seconds: 5),
+        );
       }
     } catch (e) {
+      // Close loading dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
       // Show error message
       Get.snackbar(
         'Error',

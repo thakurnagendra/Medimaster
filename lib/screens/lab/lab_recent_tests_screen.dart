@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
@@ -1835,33 +1836,38 @@ class _SendReportDialogState extends State<SendReportDialog> {
       }
     }
     
-    try {
-      // Create report model
-      final reportModel = SendReportModel(
-        id: printId,
-        sendMethod: sendMethod,
-        recipientAddress: recipientAddress,
-        usePatientContact: sendToPatient,
-        sendToClient: sendToClient,
-        sendToDoctor: sendToDoctor,
-      );
-      
-      // Get report service
-      final reportService = Get.put(ReportService());
-      
-      // Show loading indicator
-      Get.dialog(
-        const Center(
+    // Create report model
+    final reportModel = SendReportModel(
+      id: printId,
+      sendMethod: sendMethod,
+      recipientAddress: recipientAddress,
+      usePatientContact: sendToPatient,
+      sendToClient: sendToClient,
+      sendToDoctor: sendToDoctor,
+    );
+    
+    // Show loading indicator
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(
           child: CircularProgressIndicator(),
         ),
-        barrierDismissible: false,
-      );
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      // Get report service
+      final reportService = Get.put(ReportService());
       
       // Send report
       final success = await reportService.sendReport(reportModel);
       
-      // Close loading indicator
-      Get.back();
+      // Close loading dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
       
       if (success) {
         // Show success message
@@ -1873,8 +1879,23 @@ class _SendReportDialogState extends State<SendReportDialog> {
           colorText: Colors.green[800],
           duration: const Duration(seconds: 3),
         );
+        // Close the send report dialog
+        Get.back();
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to send report',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900],
+          duration: const Duration(seconds: 5),
+        );
       }
     } catch (e) {
+      // Close loading dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
       // Show error message
       Get.snackbar(
         'Error',
