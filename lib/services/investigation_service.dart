@@ -7,8 +7,48 @@ import 'package:get_storage/get_storage.dart';
 import 'package:flutter/material.dart';
 
 class InvestigationService {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService = Get.find<ApiService>();
   final GetStorage _storage = Get.find<GetStorage>();
+
+  // Method to fetch test details by numeric ID
+  Future<InvestigationApiResponse> getInvestigationById(String id) async {
+    try {
+      print('DEBUG: Fetching test details with ID: $id');
+      
+      // Use the GetTestNameById endpoint
+      final response = await _apiService.get('${ApiConfig.getTestNameById}$id');
+      print('DEBUG: API Response: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        // Create a wrapper response since the API returns direct items
+        return InvestigationApiResponse(
+          totalCount: 1,
+          pageNumber: 1,
+          pageSize: 1,
+          totalPages: 1,
+          hasPreviousPage: false,
+          hasNextPage: false,
+          items: response.data is List
+              ? (response.data as List).map((item) => InvestigationItem.fromJson(item)).toList()
+              : [InvestigationItem.fromJson(response.data)],
+        );
+      }
+      
+      // Return empty response if no data
+      return InvestigationApiResponse(
+        totalCount: 0,
+        pageNumber: 1,
+        pageSize: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+        items: [],
+      );
+    } catch (e) {
+      print('Error fetching test details: $e');
+      rethrow;
+    }
+  }
 
   // Get the active company ID
   String? get _activeCompanyId {
@@ -92,6 +132,7 @@ class InvestigationService {
       
       try {
         final response = await _apiService.get(endpoint);
+        print(response);
         return InvestigationListResponse.fromJson(response);
       } catch (e) {
         if (e is ApiException && e.isCompanyError) {
@@ -149,13 +190,15 @@ class InvestigationService {
       }
 
       // Log important parameters for debugging
-      print('Fetching investigations with filters:');
-      print('- Status: "$status"');
-      print('- SearchTerm: "$searchTerm"');
-      print('- Doctor ID: "$doctorId"');
-      print('- Agent: "$agent"');
-      print('- From Date: "$fromDate"');
-      print('- To Date: "$toDate"');
+      print('DEBUG: Fetching investigations with filters:');
+      print('DEBUG: - Status: "$status"');
+      print('DEBUG: - SearchTerm: "$searchTerm"');
+      print('DEBUG: - Doctor ID: "$doctorId"');
+      print('DEBUG: - Agent: "$agent"');
+      print('DEBUG: - From Date: "$fromDate"');
+      print('DEBUG: - To Date: "$toDate"');
+      print('DEBUG: - Page Number: $pageNumber');
+      print('DEBUG: - Page Size: $pageSize');
 
       // Convert query parameters to URL query string
       final queryString = queryParams.entries

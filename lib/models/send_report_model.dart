@@ -12,9 +12,9 @@ class SendReportModel {
     required this.sendMethod,
     required this.recipientAddress,
     this.designId = 0,
-    this.usePatientContact = true,
-    this.sendToClient = true,
-    this.sendToDoctor = true,
+    this.usePatientContact = false,
+    this.sendToClient = false,
+    this.sendToDoctor = false,
   });
 
   // Convert model to JSON
@@ -29,8 +29,16 @@ class SendReportModel {
       'sendToClient': sendToClient,
       'sendToDoctor': sendToDoctor,
     };
-    
+
     return json;
+  }
+
+  // String representation for debugging
+  @override
+  String toString() {
+    return 'SendReportModel(id: $id, sendMethod: $sendMethod, recipientAddress: $recipientAddress, '
+        'designId: $designId, usePatientContact: $usePatientContact, '
+        'sendToClient: $sendToClient, sendToDoctor: $sendToDoctor)';
   }
 
   // Create a copy with modified fields
@@ -53,4 +61,4 @@ class SendReportModel {
       sendToDoctor: sendToDoctor ?? this.sendToDoctor,
     );
   }
-} 
+}

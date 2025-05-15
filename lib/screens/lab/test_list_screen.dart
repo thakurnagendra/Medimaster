@@ -4,12 +4,12 @@ import 'package:medimaster/controllers/lab_controller.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
 
 class TestListScreen extends StatelessWidget {
-  final String billNo;
+  final String investigationId;
   final String patientName;
 
   const TestListScreen({
     Key? key,
-    required this.billNo,
+    required this.investigationId,
     required this.patientName,
   }) : super(key: key);
 
@@ -19,35 +19,25 @@ class TestListScreen extends StatelessWidget {
 
     // Fetch test list when screen is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.fetchTestList(billNo);
+      controller.fetchTestList(investigationId);
     });
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Test List',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              patientName,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ],
+        centerTitle: false,
+        title: Text(
+          'Tests for $patientName',
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Get.back(),
         ),
       ),
@@ -55,43 +45,73 @@ class TestListScreen extends StatelessWidget {
         color: AppConstantColors.labBackground,
         child: Obx(() {
           if (controller.isLoadingTests.value) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
           if (controller.testList.isEmpty) {
             return Center(
-              child: Text(
-                'No tests found',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.science_outlined,
+                      size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No tests found',
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
           return ListView.builder(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             itemCount: controller.testList.length,
             itemBuilder: (context, index) {
               final test = controller.testList[index];
               return Card(
-                margin: EdgeInsets.only(bottom: 8),
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 1,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  title: Text(
-                    test.testName,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppConstantColors.labAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(
+                          Icons.science_outlined,
+                          color: AppConstantColors.labAccent,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          test.testName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  trailing: Icon(Icons.medical_services, color: AppConstantColors.labAccent),
                 ),
               );
             },

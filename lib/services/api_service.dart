@@ -32,12 +32,11 @@ class ApiService {
   Future<void> _checkNetworkStatus() async {
     try {
       // Simple ping to Google to check connectivity
-      final response = await http
-          .get(Uri.parse('https://www.google.com'))
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => http.Response('Timeout', 408),
-          );
+      final response =
+          await http.get(Uri.parse('https://www.google.com')).timeout(
+                const Duration(seconds: 5),
+                onTimeout: () => http.Response('Timeout', 408),
+              );
 
       final bool previousStatus = isNetworkAvailable.value;
       isNetworkAvailable.value =
@@ -65,9 +64,9 @@ class ApiService {
 
   // Common headers
   Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
 
   // Add auth token and selected company token to headers if available
   Map<String, String> _getAuthHeaders() {
@@ -136,21 +135,10 @@ class ApiService {
       print(
         'Headers: ${headers.toString().replaceAll(RegExp(r'Bearer [A-Za-z0-9\._-]+'), 'Bearer [REDACTED]')}',
       );
+      print('${ApiConfig.baseUrl}$endpoint');
 
       final response = await http
-          .get(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers)
-          .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () {
-              print('GET request timed out for $endpoint');
-              isNetworkAvailable.value = false;
-              throw ApiException(
-                message: 'Request timed out',
-                statusCode: 408,
-                isNetworkError: true,
-              );
-            },
-          );
+          .get(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers);
 
       // Check for authentication error
       if (response.statusCode == 401 && retryCount < 2) {
@@ -296,7 +284,8 @@ class ApiService {
 
         print('DETAILED REQUEST INFO:');
         print('URL: $requestUrl');
-        print('Headers: ${headers.toString().replaceAll(RegExp(r'Bearer [A-Za-z0-9\._-]+'), 'Bearer [REDACTED]')}');
+        print(
+            'Headers: ${headers.toString().replaceAll(RegExp(r'Bearer [A-Za-z0-9\._-]+'), 'Bearer [REDACTED]')}');
         print('Body: $requestBody');
 
         response = await http.post(
@@ -311,7 +300,8 @@ class ApiService {
         if (response.body.length < 1000) {
           print('Response Body: ${response.body}');
         } else {
-          print('Response Body Length: ${response.body.length} characters (too long to print)');
+          print(
+              'Response Body Length: ${response.body.length} characters (too long to print)');
         }
       }
 
@@ -512,8 +502,8 @@ class ApiService {
       try {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         if (errorData['message']?.toString().toLowerCase().contains(
-              'company',
-            ) ==
+                  'company',
+                ) ==
             true) {
           throw ApiException(
             message: errorData['message'] ?? 'Company authorization failed',
@@ -570,8 +560,7 @@ class ApiService {
       }
       // Handle specific error status codes
       else if (response.statusCode == 401) {
-        final errorMsg =
-            data['message'] ??
+        final errorMsg = data['message'] ??
             data['error'] ??
             'Unauthorized: Authentication failed';
         throw ApiException(message: errorMsg, statusCode: 401);
@@ -707,26 +696,26 @@ class ApiService {
         try {
           final response = await http
               .post(
-                Uri.parse('${ApiConfig.baseUrl}${ApiConfig.refreshToken}'),
-                headers: refreshHeaders,
-                body: json.encode({
-                  'username': username,
-                  'currentToken': currentToken,
-                }),
-              )
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.refreshToken}'),
+            headers: refreshHeaders,
+            body: json.encode({
+              'username': username,
+              'currentToken': currentToken,
+            }),
+          )
               .timeout(
-                const Duration(seconds: 15),
-                onTimeout: () {
-                  print('Token refresh request timed out');
-                  throw TimeoutException('Token refresh timed out');
-                },
-              );
+            const Duration(seconds: 15),
+            onTimeout: () {
+              print('Token refresh request timed out');
+              throw TimeoutException('Token refresh timed out');
+            },
+          );
 
           if (response.statusCode >= 200 && response.statusCode < 300) {
             // Handle HTML responses here too
             if (response.body.trim().toLowerCase().startsWith(
-                  '<!doctype html>',
-                ) ||
+                      '<!doctype html>',
+                    ) ||
                 response.body.trim().toLowerCase().startsWith('<html')) {
               print('Received HTML response on direct token refresh');
 
@@ -876,24 +865,26 @@ class ApiService {
   Future<dynamic> getLabReportPdfUrl(int printId, {int groupId = 0}) async {
     try {
       // For PDF files, we need to use direct http client to get binary data
-      final url = Uri.parse('${ApiConfig.baseUrl}/Report/LabReportPdf?id=$printId&groupId=$groupId');
+      final url = Uri.parse(
+          '${ApiConfig.baseUrl}/Report/LabReportPdf?id=$printId&groupId=$groupId');
       print('Fetching PDF directly from: $url');
-      
+
       final headers = _getAuthHeaders();
       // Add specific headers for PDF acceptance
       headers['Accept'] = 'application/pdf';
-      
+
       try {
         // Try direct HTTP request for binary PDF data
         final http.Response response = await http.get(url, headers: headers);
-        
+
         if (response.statusCode == 200) {
           // Check if the content type indicates it's a PDF
           final contentType = response.headers['content-type'] ?? '';
           print('PDF response content type: $contentType');
-          
+
           if (contentType.contains('application/pdf')) {
-            print('Received direct PDF data: ${response.bodyBytes.length} bytes');
+            print(
+                'Received direct PDF data: ${response.bodyBytes.length} bytes');
             // Return raw PDF bytes
             return response.bodyBytes;
           } else {
@@ -911,7 +902,7 @@ class ApiService {
         final response = await get(
           '/Report/LabReportPdf?id=$printId&groupId=$groupId',
         );
-        
+
         print('Fallback API response type: ${response.runtimeType}');
         return response;
       }
@@ -925,16 +916,18 @@ class ApiService {
   Future<http.Response> getRawPdf(int printId, int groupId) async {
     try {
       // Use Uri.https for secure connection
-      final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.reportPdf}?id=$printId&groupId=$groupId');
-      
+      final url = Uri.parse(
+          '${ApiConfig.baseUrl}${ApiConfig.reportPdf}?id=$printId&groupId=$groupId');
+
       // Get auth headers with token
       final headers = _getAuthHeaders();
       headers['Accept'] = 'application/pdf, application/json';
-      
+
       print('Making authenticated request for PDF: $url');
       final response = await http.get(url, headers: headers);
-      
-      print('Raw PDF response status: ${response.statusCode}, contentType: ${response.headers['content-type']}');
+
+      print(
+          'Raw PDF response status: ${response.statusCode}, contentType: ${response.headers['content-type']}');
       return response;
     } catch (e) {
       print('Error in raw PDF request: $e');

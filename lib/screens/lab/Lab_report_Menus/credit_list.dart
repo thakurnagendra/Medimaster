@@ -6,6 +6,7 @@ import 'package:medimaster/models/credit_list_model.dart';
 import 'package:medimaster/services/credit_list_service.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LabReportMenuCreditListScreen extends StatefulWidget {
   const LabReportMenuCreditListScreen({super.key});
@@ -305,11 +306,22 @@ class _LabReportMenuCreditListScreenState
                     children: [
                       const Icon(Icons.phone, size: 12, color: Colors.green),
                       const SizedBox(width: 4),
-                      Text(
-                        credit.pMobile ?? 'No mobile number',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                      InkWell(
+                        onTap: () {
+                          // Use url_launcher to open the dial pad with the phone number
+                          if (credit.pMobile != null &&
+                              credit.pMobile!.isNotEmpty) {
+                            final Uri telUri =
+                                Uri(scheme: 'tel', path: credit.pMobile);
+                            launchUrl(telUri);
+                          }
+                        },
+                        child: Text(
+                          credit.pMobile ?? 'No mobile number',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
+                          ),
                         ),
                       ),
                     ],

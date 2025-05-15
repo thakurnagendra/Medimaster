@@ -13,6 +13,8 @@ import 'package:medimaster/models/send_report_model.dart';
 import 'package:medimaster/services/report_service.dart';
 import 'package:medimaster/utils/logger.dart';
 import 'package:medimaster/screens/lab/test_list_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class LabHomeScreen extends StatelessWidget {
   const LabHomeScreen({super.key});
@@ -989,133 +991,182 @@ class LabHomeScreen extends StatelessWidget {
                                     scrollDirection: Axis.horizontal,
                                     child: Row(
                                       children: [
+                                        // View Test button - always shown for all statuses
                                         _buildActionButton(
                                           icon: Icons.remove_red_eye,
                                           label: 'View Test',
                                           color: Colors.blue,
                                           onTap: () {
                                             // Navigate to test list screen
+                                            // Print patient details from raw API data
+                                            print('\n=== Patient Details ===');
+                                            print('Basic Information:');
+                                            print('- Raw ID: ${test['id']}');
+                                            print(
+                                                '- Bill No: ${test['b_BillNo']}');
+                                            // Use the numeric id for the API call
+                                            final numericId =
+                                                test['id']?.toString() ?? '';
+                                            if (numericId.isEmpty) {
+                                              Get.snackbar(
+                                                  'Error', 'Test ID not found');
+                                              return;
+                                            }
+
                                             Get.to(() => TestListScreen(
-                                                  billNo: test['b_BillNo'] ?? '', // Using bill number for API call
-                                                  patientName: test['b_Name'] ?? 'Unknown Patient',
+                                                  investigationId: numericId,
+                                                  patientName: test['b_Name'] ??
+                                                      'Unknown',
                                                 ));
                                           },
                                         ),
-                                        _buildActionButton(
-                                          icon: Icons.description_outlined,
-                                          label: 'View Report',
-                                          color: Colors.teal,
-                                          onTap: () async {
-                                            // View report action
-                                            if (test['printId'] != null) {
-                                              final int printId = int.tryParse(test['printId'].toString()) ?? 0;
-                                              print('Opening report with printId: $printId');
-                                              
-                                              if (printId > 0) {
-                                                try {
-                                                  await PDFViewerUtil.viewLabReport(printId);
-                                                } catch (e) {
-                                                  print('Error showing PDF: $e');
+
+                                        // Show additional action buttons only for "Completed" tests
+                                        if (test['status'] == 'Completed') ...[
+                                          _buildActionButton(
+                                            icon: Icons.description_outlined,
+                                            label: 'View Report',
+                                            color: Colors.teal,
+                                            onTap: () async {
+                                              // View report action
+                                              if (test['printId'] != null) {
+                                                final int printId =
+                                                    int.tryParse(test['printId']
+                                                            .toString()) ??
+                                                        0;
+                                                print(
+                                                    'Opening report with printId: $printId');
+
+                                                if (printId > 0) {
+                                                  try {
+                                                    await PDFViewerUtil
+                                                        .viewLabReport(printId);
+                                                  } catch (e) {
+                                                    print(
+                                                        'Error showing PDF: $e');
+                                                    Get.snackbar(
+                                                      'Error',
+                                                      'Failed to open report: ${e.toString()}',
+                                                      snackPosition:
+                                                          SnackPosition.BOTTOM,
+                                                      backgroundColor:
+                                                          Colors.red[100],
+                                                      colorText:
+                                                          Colors.red[900],
+                                                      duration:
+                                                          Duration(seconds: 5),
+                                                    );
+                                                  }
+                                                } else {
                                                   Get.snackbar(
-                                                    'Error', 
-                                                    'Failed to open report: ${e.toString()}',
-                                                    snackPosition: SnackPosition.BOTTOM,
-                                                    backgroundColor: Colors.red[100],
+                                                    'Error',
+                                                    'Invalid report ID: $printId',
+                                                    snackPosition:
+                                                        SnackPosition.BOTTOM,
+                                                    backgroundColor:
+                                                        Colors.red[100],
                                                     colorText: Colors.red[900],
-                                                    duration: const Duration(seconds: 5),
                                                   );
                                                 }
                                               } else {
+                                                print(
+                                                    'PrintId not available in test data: ${test['id']}');
                                                 Get.snackbar(
-                                                  'Error', 
-                                                  'Invalid report ID: $printId',
-                                                  snackPosition: SnackPosition.BOTTOM,
-                                                  backgroundColor: Colors.red[100],
+                                                  'Error',
+                                                  'Report not available for this test',
+                                                  snackPosition:
+                                                      SnackPosition.BOTTOM,
+                                                  backgroundColor:
+                                                      Colors.red[100],
                                                   colorText: Colors.red[900],
                                                 );
                                               }
-                                            } else {
-                                              print('PrintId not available in test data: ${test['id']}');
-                                              Get.snackbar(
-                                                'Error', 
-                                                'Report not available for this test',
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                backgroundColor: Colors.red[100],
-                                                colorText: Colors.red[900],
-                                              );
-                                            }
-                                          },
-                                        ),
-                                        _buildActionButton(
-                                          icon: Icons.send,
-                                          label: 'Send Report',
-                                          color: Colors.orange,
-                                          onTap: () {
-                                            // Send report action
-                                            if (test['printId'] != null) {
-                                              final int printId = int.tryParse(test['printId'].toString()) ?? 0;
-                                              if (printId > 0) {
-                                                // Show the send report dialog instead of navigating to a new screen
-                                                Get.dialog(
-                                                  Dialog(
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(16),
+                                            },
+                                          ),
+                                          _buildActionButton(
+                                            icon: Icons.send,
+                                            label: 'Send Report',
+                                            color: Colors.orange,
+                                            onTap: () {
+                                              // Send report action
+                                              if (test['printId'] != null) {
+                                                final int printId =
+                                                    int.tryParse(test['printId']
+                                                            .toString()) ??
+                                                        0;
+                                                if (printId > 0) {
+                                                  // Show the send report dialog instead of navigating to a new screen
+                                                  Get.dialog(
+                                                    Dialog(
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                      ),
+                                                      child: SendReportDialog(
+                                                          testData: test),
                                                     ),
-                                                    child: SendReportDialog(testData: test),
-                                                  ),
-                                                );
+                                                  );
+                                                } else {
+                                                  Get.snackbar(
+                                                    'Error',
+                                                    'Invalid report ID: $printId',
+                                                    snackPosition:
+                                                        SnackPosition.BOTTOM,
+                                                    backgroundColor:
+                                                        Colors.red[100],
+                                                    colorText: Colors.red[900],
+                                                  );
+                                                }
                                               } else {
+                                                print(
+                                                    'PrintId not available in test data: ${test['id']}');
                                                 Get.snackbar(
-                                                  'Error', 
-                                                  'Invalid report ID: $printId',
-                                                  snackPosition: SnackPosition.BOTTOM,
-                                                  backgroundColor: Colors.red[100],
+                                                  'Error',
+                                                  'Report not available for this test',
+                                                  snackPosition:
+                                                      SnackPosition.BOTTOM,
+                                                  backgroundColor:
+                                                      Colors.red[100],
                                                   colorText: Colors.red[900],
                                                 );
                                               }
-                                            } else {
-                                              print('PrintId not available in test data: ${test['id']}');
-                                              Get.snackbar(
-                                                'Error', 
-                                                'Report not available for this test',
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                backgroundColor: Colors.red[100],
-                                                colorText: Colors.red[900],
+                                            },
+                                          ),
+                                          _buildActionButton(
+                                            icon: Icons.notifications_outlined,
+                                            label: 'Notify',
+                                            color: Colors.amber,
+                                            onTap: () {
+                                              // Notify by system action
+                                            },
+                                          ),
+                                          _buildActionButton(
+                                            icon: Icons.delete_outline,
+                                            label: 'Delete',
+                                            color: Colors.red,
+                                            onTap: () {
+                                              // Delete report action
+                                              Get.defaultDialog(
+                                                title: 'Delete Report',
+                                                content: const Text(
+                                                  'Are you sure you want to delete this report?',
+                                                ),
+                                                textConfirm: 'Delete',
+                                                textCancel: 'Cancel',
+                                                confirmTextColor: Colors.white,
+                                                cancelTextColor:
+                                                    Colors.grey[700],
+                                                buttonColor: Colors.red,
+                                                onConfirm: () {
+                                                  // Delete action
+                                                  Get.back();
+                                                },
                                               );
-                                            }
-                                          },
-                                        ),
-                                        _buildActionButton(
-                                          icon: Icons.notifications_outlined,
-                                          label: 'Notify',
-                                          color: Colors.amber,
-                                          onTap: () {
-                                            // Notify by system action
-                                          },
-                                        ),
-                                        _buildActionButton(
-                                          icon: Icons.delete_outline,
-                                          label: 'Delete',
-                                          color: Colors.red,
-                                          onTap: () {
-                                            // Delete report action
-                                            Get.defaultDialog(
-                                              title: 'Delete Report',
-                                              content: const Text(
-                                                'Are you sure you want to delete this report?',
-                                              ),
-                                              textConfirm: 'Delete',
-                                              textCancel: 'Cancel',
-                                              confirmTextColor: Colors.white,
-                                              cancelTextColor: Colors.grey[700],
-                                              buttonColor: Colors.red,
-                                              onConfirm: () {
-                                                // Delete action
-                                                Get.back();
-                                              },
-                                            );
-                                          },
-                                        ),
+                                            },
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -1141,6 +1192,12 @@ class LabHomeScreen extends StatelessWidget {
     required String value,
     required Color iconColor,
   }) {
+    // Check if this is a phone/mobile contact and the value is a valid number
+    bool isPhoneContact = label.toLowerCase() == 'mobile' &&
+        value.isNotEmpty &&
+        value != 'n/a' &&
+        value != 'N/A';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1158,11 +1215,28 @@ class LabHomeScreen extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Text(
-                value,
-                style: const TextStyle(fontSize: 11),
-                overflow: TextOverflow.ellipsis,
-              ),
+              if (isPhoneContact)
+                InkWell(
+                  onTap: () {
+                    // Use url_launcher to open the dial pad with the phone number
+                    final Uri telUri = Uri(scheme: 'tel', path: value);
+                    launchUrl(telUri);
+                  },
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                ),
             ],
           ),
         ),
@@ -1241,14 +1315,17 @@ class SendReportDialog extends StatefulWidget {
 class _SendReportDialogState extends State<SendReportDialog> {
   // Selected method (WhatsApp, SMS, Email)
   String selectedMethod = 'WhatsApp';
-  
+
   // Recipients selection states
-  bool sendToPatient = true;
+  bool sendToPatient = false;
   bool sendToDoctor = false;
   bool sendToClient = false;
-  
+
   // Track if dropdown is expanded
   bool isDropdownExpanded = false;
+
+  // Loading state
+  bool isLoading = false;
 
   // Controllers for input fields
   final phoneController = TextEditingController();
@@ -1263,198 +1340,255 @@ class _SendReportDialogState extends State<SendReportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppConstantColors.labBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      // Make the entire dialog scrollable to fix overflow issues
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title
-            const Center(
-              child: Text(
-                'Send Report',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            // WhatsApp, SMS, Email options in horizontal row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildMethodOption('WhatsApp', Icons.message, Colors.green),
-                _buildMethodOption('SMS', Icons.sms, Colors.purple),
-                _buildMethodOption('Email', Icons.email, Colors.blue),
-              ],
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Phone number input for WhatsApp and SMS
-            if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS')
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: phoneController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter phone number',
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(
-                      Icons.phone,
-                      color: selectedMethod == 'WhatsApp' ? Colors.green : Colors.purple,
-                    ),
-                    hintStyle: TextStyle(color: Colors.grey[400]),
+    return GestureDetector(
+      // Dismiss keyboard when tapping outside of text fields
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppConstantColors.labBackground,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        // Make the entire dialog scrollable to fix overflow issues
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              const Center(
+                child: Text(
+                  'Send Report',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  keyboardType: TextInputType.phone,
                 ),
               ),
-            
-            // Email input for Email
-            if (selectedMethod == 'Email')
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter email address',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(
-                      Icons.email,
-                      color: Colors.blue,
-                    ),
-                    hintStyle: TextStyle(color: Color(0xFFAAAAAA)),
+              const SizedBox(height: 20),
+
+              // WhatsApp, SMS, Email options in horizontal row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildMethodOption('WhatsApp', Icons.message, Colors.green),
+                  _buildMethodOption('SMS', Icons.sms, Colors.purple),
+                  _buildMethodOption('Email', Icons.email, Colors.blue),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Phone number input for WhatsApp and SMS
+              if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS')
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              ),
-            
-            const SizedBox(height: 20),
-            
-            // Dropdown header
-            InkWell(
-              onTap: () {
-                setState(() {
-                  isDropdownExpanded = !isDropdownExpanded;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Select Recipients',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                  child: TextField(
+                    controller: phoneController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter phone number',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      border: InputBorder.none,
+                      prefixIcon: Icon(
+                        Icons.phone,
+                        color: selectedMethod == 'WhatsApp'
+                            ? Colors.green
+                            : Colors.purple,
                       ),
+                      hintStyle: TextStyle(color: Colors.grey[400]),
                     ),
-                    Icon(
-                      isDropdownExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: Colors.grey[700],
-                    ),
-                  ],
+                    keyboardType: TextInputType.phone,
+                    autocorrect: false,
+                    autofillHints: null,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            
-            // Dropdown content
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: isDropdownExpanded ? 180 : 0,  // Increased height for the new option
-              curve: Curves.easeInOut,
-              child: Container(
-                color: Colors.white,
-                child: SingleChildScrollView(
-                  child: Column(
+
+              // Email input for Email
+              if (selectedMethod == 'Email')
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: TextField(
+                    controller: emailController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter email address',
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      border: InputBorder.none,
+                      prefixIcon: Icon(
+                        Icons.email,
+                        color: Colors.blue,
+                      ),
+                      hintStyle: TextStyle(color: Color(0xFFAAAAAA)),
+                    ),
+                    style: const TextStyle(
+                      color: Colors.black87,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    autofillHints: const [AutofillHints.email],
+                    autocorrect: false,
+                    enableSuggestions: true,
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+
+              // Dropdown header
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    isDropdownExpanded = !isDropdownExpanded;
+                  });
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildRecipientCheckbox(
-                        'Send to Patient',
-                        'Patient: ${widget.testData['patientName']}',
-                        sendToPatient,
-                        (value) => setState(() => sendToPatient = value ?? false),
-                        Colors.blue,  // Set checkbox color to blue
+                      const Text(
+                        'Select Recipients',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
                       ),
-                      _buildRecipientCheckbox(
-                        'Send to Doctor',
-                        'Doctor: ${widget.testData['referredBy']}',
-                        sendToDoctor,
-                        (value) => setState(() => sendToDoctor = value ?? false),
-                        Colors.blue,  // Set checkbox color to blue
-                      ),
-                      _buildRecipientCheckbox(
-                        'Send to Client',
-                        'Client: ${widget.testData['clientName']}',
-                        sendToClient,
-                        (value) => setState(() => sendToClient = value ?? false),
-                        Colors.blue,  // Set checkbox color to blue
+                      Icon(
+                        isDropdownExpanded
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        color: Colors.grey[700],
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.grey[700]),
+
+              // Dropdown content
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: isDropdownExpanded
+                    ? 180
+                    : 0, // Increased height for the new option
+                curve: Curves.easeInOut,
+                child: Container(
+                  color: Colors.white,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildRecipientCheckbox(
+                          'Send to Patient',
+                          'Patient: ${widget.testData['patientName'] ?? widget.testData['b_Name'] ?? 'Unknown'}',
+                          sendToPatient,
+                          (value) =>
+                              setState(() => sendToPatient = value ?? false),
+                          Colors.blue, // Set checkbox color to blue
+                        ),
+                        _buildRecipientCheckbox(
+                          'Send to Doctor',
+                          'Doctor: ${widget.testData['referredBy'] ?? widget.testData['b_ReferdBy'] ?? 'Unknown'}',
+                          sendToDoctor,
+                          (value) =>
+                              setState(() => sendToDoctor = value ?? false),
+                          Colors.blue, // Set checkbox color to blue
+                        ),
+                        _buildRecipientCheckbox(
+                          'Send to Client',
+                          'Client: ${widget.testData['clientName'] ?? widget.testData['refBy'] ?? 'Unknown'}',
+                          sendToClient,
+                          (value) =>
+                              setState(() => sendToClient = value ?? false),
+                          Colors.blue, // Set checkbox color to blue
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    // Implement send functionality
-                    _sendReport();
-                    Get.back();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Action buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: isLoading ? null : () => Get.back(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      disabledForegroundColor: Colors.grey[400],
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                          color:
+                              isLoading ? Colors.grey[400] : Colors.grey[700]),
+                    ),
                   ),
-                  child: const Text('Send'),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            // Implement send functionality
+                            _sendReport();
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[300],
+                      disabledForegroundColor: Colors.grey[500],
+                    ),
+                    child: isLoading
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white.withOpacity(0.8)),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Sending...'),
+                            ],
+                          )
+                        : const Text('Send'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-  
+
   Widget _buildMethodOption(String method, IconData icon, Color color) {
     final bool isSelected = selectedMethod == method;
-    
+
     return InkWell(
       onTap: () {
         setState(() {
@@ -1468,9 +1602,9 @@ class _SendReportDialogState extends State<SendReportDialog> {
             decoration: BoxDecoration(
               color: isSelected ? color.withOpacity(0.2) : Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
-              border: isSelected 
-                ? Border.all(color: color, width: 2)
-                : Border.all(color: Colors.grey[300]!, width: 1),
+              border: isSelected
+                  ? Border.all(color: color, width: 2)
+                  : Border.all(color: Colors.grey[300]!, width: 1),
             ),
             child: Icon(
               icon,
@@ -1490,7 +1624,7 @@ class _SendReportDialogState extends State<SendReportDialog> {
       ),
     );
   }
-  
+
   Widget _buildRecipientCheckbox(
     String title,
     String subtitle,
@@ -1515,28 +1649,44 @@ class _SendReportDialogState extends State<SendReportDialog> {
       activeColor: checkboxColor, // Set the active checkbox color
     );
   }
-  
+
+  // Helper to show snackbar and hide keyboard
+  void _showSnackbar(String title, String message, bool isError) {
+    // Hide keyboard
+    FocusScope.of(context).unfocus();
+
+    // Show snackbar
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: isError ? Colors.red[100] : Colors.green[100],
+      colorText: isError ? Colors.red[900] : Colors.green[800],
+      duration: Duration(seconds: isError ? 5 : 3),
+    );
+  }
+
   void _sendReport() async {
+    // Hide keyboard if it's currently showing
+    FocusScope.of(context).unfocus();
+
     // Check if printId is available
     if (widget.testData['printId'] == null) {
-      Get.snackbar(
+      _showSnackbar(
         'Error',
         'Report ID is not available for this test',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
+        true,
       );
       return;
     }
-    
-    final int printId = int.tryParse(widget.testData['printId'].toString()) ?? 0;
+
+    final int printId =
+        int.tryParse(widget.testData['printId'].toString()) ?? 0;
     if (printId <= 0) {
-      Get.snackbar(
+      _showSnackbar(
         'Error',
         'Invalid report ID: $printId',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
+        true,
       );
       return;
     }
@@ -1545,17 +1695,6 @@ class _SendReportDialogState extends State<SendReportDialog> {
     int sendMethod = 1; // Default to Email
     if (selectedMethod == 'WhatsApp') {
       sendMethod = 2;
-      // Show warning about potential WhatsApp configuration issue
-      Get.snackbar(
-        'WhatsApp Notice',
-        'WhatsApp messaging may not be configured on the server. If you encounter an error, please try Email or SMS instead.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.amber[100],
-        colorText: Colors.amber[900],
-        duration: const Duration(seconds: 3),
-      );
-      
-      // Log detailed information about WhatsApp selection
       Logger.i('WhatsApp selected as send method (sendMethod=2)');
     } else if (selectedMethod == 'SMS') {
       sendMethod = 3;
@@ -1563,35 +1702,44 @@ class _SendReportDialogState extends State<SendReportDialog> {
     } else {
       Logger.i('Email selected as send method (sendMethod=1)');
     }
-    
+
     // Get recipient address based on selected method
     String recipientAddress = '';
     if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS') {
-      recipientAddress = phoneController.text.trim();
-      if (recipientAddress.isEmpty && !sendToPatient && !sendToDoctor && !sendToClient) {
-        Get.snackbar(
+      // Get phone number and ensure it's properly formatted
+      String phoneNumber = phoneController.text.trim();
+
+      // Remove any non-digit characters that might have been added
+      phoneNumber = phoneNumber.replaceAll(RegExp(r'\D'), '');
+
+      recipientAddress = phoneNumber;
+
+      if (recipientAddress.isEmpty &&
+          !sendToPatient &&
+          !sendToDoctor &&
+          !sendToClient) {
+        _showSnackbar(
           'Error',
           'Please enter a phone number or select at least one recipient',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900],
+          true,
         );
         return;
       }
     } else if (selectedMethod == 'Email') {
       recipientAddress = emailController.text.trim();
-      if (recipientAddress.isEmpty && !sendToPatient && !sendToDoctor && !sendToClient) {
-        Get.snackbar(
+      if (recipientAddress.isEmpty &&
+          !sendToPatient &&
+          !sendToDoctor &&
+          !sendToClient) {
+        _showSnackbar(
           'Error',
           'Please enter an email address or select at least one recipient',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900],
+          true,
         );
         return;
       }
     }
-    
+
     // Create report model
     final reportModel = SendReportModel(
       id: printId,
@@ -1601,71 +1749,89 @@ class _SendReportDialogState extends State<SendReportDialog> {
       sendToClient: sendToClient,
       sendToDoctor: sendToDoctor,
     );
-    
+
     // Log the report model for debugging
     Logger.i('Sending report with model: ${reportModel.toJson()}');
-    
-    // Show loading indicator
+
+    // Set loading state to true
+    setState(() {
+      isLoading = true;
+    });
+
+    // Show loading indicator with text
     Get.dialog(
       WillPopScope(
         onWillPop: () async => false,
-        child: const Center(
-          child: CircularProgressIndicator(),
+        child: Container(
+          color: Colors.transparent,
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
         ),
       ),
       barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.3),
     );
 
     try {
       // Get report service
       final reportService = Get.put(ReportService());
-      
+
       // Send report
       Logger.i('Sending report through ReportService');
       final success = await reportService.sendReport(reportModel);
-      
-      // Close loading dialog
+
+      // First ensure loading dialog is closed
       if (Get.isDialogOpen ?? false) {
         Get.back();
       }
-      
+
+      // Update loading state
+      setState(() {
+        isLoading = false;
+      });
+
+      // Add a delay to ensure the loading dialog is fully closed
+      await Future.delayed(const Duration(milliseconds: 300));
+
       if (success) {
         // Show success message
         Logger.i('Report sent successfully');
-        Get.snackbar(
+        _showSnackbar(
           'Report Sent',
           'Report sent successfully via $selectedMethod',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[800],
-          duration: const Duration(seconds: 3),
+          false,
         );
-        // Close the send report dialog
-        Get.back();
+
+        // Give time for the snackbar to appear before closing the dialog
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Close the send report dialog last
+        Navigator.of(context).pop();
       } else {
         Logger.e('Report sending failed');
-        Get.snackbar(
+        _showSnackbar(
           'Error',
           'Failed to send report',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900],
-          duration: const Duration(seconds: 5),
+          true,
         );
       }
     } catch (e) {
-      // Close loading dialog
+      // Ensure loading dialog is closed in case of error
       if (Get.isDialogOpen ?? false) {
         Get.back();
       }
+
+      // Update loading state
+      setState(() {
+        isLoading = false;
+      });
+
       // Show error message
-      Get.snackbar(
+      _showSnackbar(
         'Error',
         'Failed to send report: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
-        duration: const Duration(seconds: 5),
+        true,
       );
     }
   }

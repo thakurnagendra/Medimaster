@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:medimaster/config/api_config.dart';
 import 'package:medimaster/models/send_report_model.dart';
-import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/utils/logger.dart';
 import 'package:http/http.dart' as http;
 

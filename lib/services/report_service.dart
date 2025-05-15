@@ -13,95 +13,70 @@ class ReportService {
   Future<bool> sendReport(SendReportModel reportModel) async {
     try {
       // Log the request details for debugging
-      Logger.i('Sending report with method: ${reportModel.sendMethod} (1=Email, 2=WhatsApp, 3=SMS)');
-      Logger.i('Report data: ${jsonEncode(reportModel.toJson())}');
-      Logger.i('API endpoint: ${ApiConfig.baseUrl}${ApiConfig.sendReport}');
-      
-      // Since WhatsApp and SMS are not working, automatically convert to Email if those methods are selected
-      int actualSendMethod = reportModel.sendMethod;
-      String originalMethodName = '';
-      
-      if (reportModel.sendMethod == 2) { // WhatsApp
-        originalMethodName = 'WhatsApp';
-        Logger.i('WhatsApp selected, but automatically using Email instead');
-        actualSendMethod = 1; // Change to Email
-      } else if (reportModel.sendMethod == 3) { // SMS
-        originalMethodName = 'SMS';
-        Logger.i('SMS selected, but automatically using Email instead');
-        actualSendMethod = 1; // Change to Email
+      Logger.i(
+          'Sending report with method: ${reportModel.sendMethod} (1=Email, 2=WhatsApp, 3=SMS)');
+
+      // Get a copy of the report model
+      SendReportModel formattedModel = reportModel;
+
+      // Handle phone number formatting for WhatsApp and SMS
+      if (reportModel.sendMethod == 2 || reportModel.sendMethod == 3) {
+        // Format the phone number - ensure it's digits only
+        String formattedNumber =
+            reportModel.recipientAddress.replaceAll(RegExp(r'\D'), '');
+
+        // Use the formatted number
+        formattedModel =
+            reportModel.copyWith(recipientAddress: formattedNumber);
       }
-      
-      // Create the request model - if original method was WhatsApp or SMS, use Email instead
-      final SendReportModel requestModel = reportModel.copyWith(
-        sendMethod: actualSendMethod
-      );
-      
-      // Send the report
+
+      Logger.i('Report data: ${jsonEncode(formattedModel.toJson())}');
+      Logger.i('API endpoint: ${ApiConfig.baseUrl}${ApiConfig.sendReport}');
+
+      // Make sure we have a valid report ID
+      if (formattedModel.id <= 0) {
+        Logger.e('Invalid report ID: ${formattedModel.id}');
+        throw Exception('Invalid report ID');
+      }
+
+      // Make sure we have a valid send method
+      if (formattedModel.sendMethod < 1 || formattedModel.sendMethod > 3) {
+        Logger.e('Invalid send method: ${formattedModel.sendMethod}');
+        throw Exception('Invalid send method');
+      }
+
+      // Send the report with the selected method
       final response = await _apiService.post(
         ApiConfig.sendReport,
-        requestModel.toJson(),
+        formattedModel.toJson(),
       );
 
       // Log the response for debugging
-      Logger.i('API response received: ${response != null ? jsonEncode(response) : 'null'}');
+      Logger.i(
+          'API response received: ${response != null ? jsonEncode(response) : 'null'}');
 
       // Check if the response indicates success
-      if (response != null && (response['success'] == true || response['isSuccess'] == true)) {
-        // If we automatically changed the method, show a notification
-        if (originalMethodName.isNotEmpty) {
-          Get.snackbar(
-            'Report Sent via Email',
-            '$originalMethodName is not configured on the server. Your report was sent via Email instead.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.amber[100],
-            colorText: Colors.amber[900],
-            duration: const Duration(seconds: 5),
-          );
-        } else {
-          Get.snackbar(
-            'Report Sent',
-            'Report sent successfully via Email',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green[100],
-            colorText: Colors.green[800],
-            duration: const Duration(seconds: 3),
-          );
-        }
-        
+      if (response != null &&
+          (response['success'] == true || response['isSuccess'] == true)) {
         Logger.i('Report sent successfully');
         return true;
       }
-      
+
       // Handle error response
       String errorMessage = 'Failed to send report';
       if (response != null && response['message'] != null) {
         errorMessage = response['message'].toString();
         Logger.e('API error message: $errorMessage');
+      } else if (response != null && response.containsKey('error')) {
+        errorMessage = response['error'].toString();
+        Logger.e('API error message: $errorMessage');
       }
-      
-      // Show error message
-      Get.snackbar(
-        'Error',
-        errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
-        colorText: Get.theme.colorScheme.error,
-        duration: const Duration(seconds: 5),
-      );
-      
+
+      Logger.e('Report sending failed: $errorMessage');
       return false;
     } catch (e) {
       // Log the exception
       Logger.e('Exception in sendReport: ${e.toString()}');
-      
-      // Show error message
-      Get.snackbar(
-        'Error',
-        'Failed to send report: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
-        colorText: Get.theme.colorScheme.error,
-      );
       return false;
     }
   }

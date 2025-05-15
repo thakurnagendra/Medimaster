@@ -7,6 +7,42 @@ import 'package:medimaster/config/api_config.dart';
 import 'package:medimaster/models/test_model.dart';
 
 class LabController extends GetxController {
+  // Method to fetch patient details by investigation ID
+  Future<void> fetchPatientByInvestigationId(String investigationId) async {
+    try {
+      print('DEBUG: Fetching details for Patient ID: $investigationId');
+      final response =
+          await _investigationService.getInvestigationById(investigationId);
+
+      print('DEBUG: API Response received');
+      print('DEBUG: Total items in response: ${response.items.length}');
+
+      if (response.items.isNotEmpty) {
+        final investigation = response.items.first;
+
+        print('\n=== Patient Details (ID: $investigationId) ===');
+        print('Patient ID (System): ${investigation.id}');
+        print('Patient ID (Medical): ${investigation.bPatientId ?? 'N/A'}');
+        print('Patient Name: ${investigation.bName ?? 'N/A'}');
+        print('Bill Number: ${investigation.bBillNo ?? 'N/A'}');
+        print('Sample Count: ${investigation.sampleCount}');
+        print('\nPersonal Information:');
+        print('Age: ${investigation.bAge ?? 'N/A'}');
+        print('Sex: ${investigation.bSex ?? 'N/A'}');
+        print('Address: ${investigation.bAddress ?? 'N/A'}');
+        print('Mobile: ${investigation.bMobileNo ?? 'N/A'}');
+        print('\nDates:');
+        print('Visit Date: ${investigation.bDate ?? 'N/A'}');
+        print('Nepali Date: ${investigation.bMiti ?? 'N/A'}');
+        print('========================\n');
+      } else {
+        print('No patient found with Patient ID: $investigationId');
+      }
+    } catch (e) {
+      print('Error fetching patient details: $e');
+    }
+  }
+
   // We're keeping these for compatibility, but the dropdown is being removed from UI
   final RxString selectedTimePeriod = 'This Week'.obs;
   final List<String> timePeriods = [
@@ -15,6 +51,62 @@ class LabController extends GetxController {
     'This Month',
     'This Year',
   ];
+
+  // Method to fetch test details by ID
+  Future<List<TestModel>> getTestDetailsById(String testId) async {
+    try {
+      final response =
+          await apiService.get('${ApiConfig.getTestNameById}$testId');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((item) => TestModel.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching test details: $e');
+      return [];
+    }
+  }
+
+  // Method to print testId for a specific patient
+  Future<void> printPatientInvestigationDetails(String patientName) async {
+    try {
+      print('DEBUG: Starting investigation fetch...');
+      final response = await _investigationService.getInvestigations(
+        searchTerm: patientName,
+        pageSize: 1, // We only need one result
+      );
+
+      print('DEBUG: API Response received');
+      print('DEBUG: Total items in response: ${response.items.length}');
+
+      if (response.items.isNotEmpty) {
+        final investigation = response.items.first;
+
+        // Debug raw data
+        print('\nDEBUG: Raw investigation data:');
+        print('DEBUG: Actual ID (id) = ${investigation.id}');
+        print('DEBUG: Bill Number (bBillNo) = ${investigation.bBillNo}');
+        print('DEBUG: Patient ID (bPatientId) = ${investigation.bPatientId}');
+        print('DEBUG: Patient Name (bName) = ${investigation.bName}');
+        print('DEBUG: Test ID (testId) = ${investigation.testId}');
+
+        // Formatted output
+        print('\n=== Investigation Details ===');
+        print('Patient Name: ${investigation.bName ?? patientName}');
+        print('Actual ID: ${investigation.id}');
+        print('Bill Number: ${investigation.bBillNo}');
+        print('Patient ID: ${investigation.bPatientId}');
+        print('========================\n');
+      } else {
+        print('DEBUG: No items found in response');
+        print('No investigation found for patient: $patientName');
+      }
+    } catch (e) {
+      print('DEBUG: Error occurred: $e');
+      print('Error fetching investigation details: $e');
+    }
+  }
 
   // Statistics
   final RxString totalTests = '0'.obs;
@@ -73,6 +165,9 @@ class LabController extends GetxController {
 
   LabController({ApiService? apiService})
       : _apiService = apiService ?? Get.find<ApiService>();
+
+  // Method to get API service
+  ApiService get apiService => _apiService;
 
   // Reference data
   final Rx<ReferenceData?> referenceData = Rx<ReferenceData?>(null);
@@ -263,7 +358,15 @@ class LabController extends GetxController {
       // Convert Investigation items to Map format expected by UI
       final tests =
           response.items.map((test) => test.toDisplayFormat()).toList();
-      print('Received ${tests.length} tests from API');
+      print('\nReceived ${tests.length} tests from API');
+
+      // Print all patient details
+      print('All Patients:');
+      for (var test in tests) {
+        print(
+            'Patient: ${test['patientName']} (ID: ${test['id']}) - ${test['testType']} - Status: ${test['status']}');
+      }
+      print('');
 
       // If loading more data, append to existing list
       if (resetPage) {
@@ -315,33 +418,10 @@ class LabController extends GetxController {
     } catch (e) {
       print('Error fetching all tests: $e');
       if (allRecentTests.isEmpty) {
-        // Fallback to mock data if API fails and we have no data
-        print('Using mock data as fallback');
-        _generateMockData();
-
-        // If a status filter was applied, apply it to the mock data as well
-        if (status.isNotEmpty && status != 'All') {
-          applyStatusFilter(status);
-        }
-
-        // Apply date filter to mock data if needed
-        if (fromDate.isNotEmpty || toDate.isNotEmpty) {
-          try {
-            DateTime? fromDateTime;
-            DateTime? toDateTime;
-
-            if (fromDate.isNotEmpty) {
-              fromDateTime = DateTime.parse(fromDate);
-            }
-            if (toDate.isNotEmpty) {
-              toDateTime = DateTime.parse(toDate);
-            }
-
-            _applyLocalDateFilter(fromDateTime, toDateTime);
-          } catch (e) {
-            print('Error applying date filter to mock data: $e');
-          }
-        }
+        // Show error state instead of fallback to mock data
+        print('Error fetching data from API, no fallback available');
+        allRecentTests.value = [];
+        filteredRecentTests.value = [];
       }
     } finally {
       isLoading.value = false;
@@ -366,7 +446,9 @@ class LabController extends GetxController {
       );
     } catch (e) {
       print('Error loading recent tests: $e');
-      _generateMockData();
+      // No fallback to mock data
+      allRecentTests.value = [];
+      filteredRecentTests.value = [];
     }
   }
 
@@ -429,56 +511,28 @@ class LabController extends GetxController {
 
   // Private method to load mock data as fallback
   void _generateMockData() {
-    print('Generating mock data as fallback');
+    print('API returned no data and no fallback mechanism provided');
 
-    // Generate mock test data
-    allRecentTests.value = List.generate(
-      20, // Reduced from 30 to 20 for better performance
-      (index) => {
-        'id': '1003${index + 2}',
-        'patientName': 'Patient ${index + 1}',
-        'patientAge': 20 + (index % 60),
-        'patientSex': index % 2 == 0 ? 'Male' : 'Female',
-        'patientMobile': '+977 98${index.toString().padLeft(8, '0')}',
-        'patientAddress': 'Ward ${1 + (index % 10)}, Kathmandu',
-        'referredBy':
-            'Dr. ${index % 3 == 0 ? "Sharma" : (index % 3 == 1 ? "Patel" : "Kumar")} ${index % 5}',
-        'clientName': _getClientName(index),
-        'testType': _getTestType(index),
-        'date': DateTime.now()
-            .subtract(Duration(days: index % 30))
-            .toString()
-            .split(' ')[0],
-        'bsDate': _getRandomBsDate(index),
-        'status': _getStatus(index),
-      },
-    );
-
-    // Initialize filteredRecentTests with all tests
-    filteredRecentTests.value = [...allRecentTests];
-
-    print('Generated ${allRecentTests.length} mock test records');
+    // Just initialize empty lists
+    allRecentTests.value = [];
+    filteredRecentTests.value = [];
   }
 
   // Helper methods for mock data generation
   String _getClientName(int index) {
-    final clients = [
-      'City Hospital',
-      'Metro Clinic',
-      'Health Center',
-      'Private',
-    ];
-    return clients[index % clients.length];
+    return "Unknown";
   }
 
   String _getTestType(int index) {
-    final types = ['Blood Test', 'Urine Test', 'X-Ray', 'ECG', 'CT Scan'];
-    return types[index % types.length];
+    return "Unknown";
   }
 
   String _getStatus(int index) {
-    final statuses = ['Pending', 'In Progress', 'Completed', 'Canceled'];
-    return statuses[index % statuses.length];
+    return "Unknown";
+  }
+
+  String _getRandomBsDate(int index) {
+    return "";
   }
 
   // Apply filter for status
@@ -808,33 +862,13 @@ class LabController extends GetxController {
         .toList();
   }
 
-  String _getRandomBsDate(int index) {
-    // This is a simplified mock implementation for Nepali dates (BS)
-    // In a real app, you would use a proper Nepali date conversion library
-
-    // Current Nepali year is approximately 2080/2081
-    const int bsYear = 2080;
-
-    // Generate month 1-12
-    final int bsMonth = 1 + (index % 12);
-
-    // Generate day 1-30 (simplified)
-    final int bsDay = 1 + (index % 28);
-
-    // Format the date as YY-MM-DD
-    final String formattedBsDate =
-        '$bsYear-${bsMonth.toString().padLeft(2, '0')}-${bsDay.toString().padLeft(2, '0')}';
-
-    return formattedBsDate;
-  }
-
   // Update statistics based on selected time period
   void updateStatistics() {
-    // For demo purposes, we'll just use some random calculations
-    totalTests.value = '23';
-    completedTests.value = '18';
-    pendingTests.value = '5';
-    todayTests.value = '23';
+    // Use default values of 0 instead of random calculations
+    totalTests.value = '0';
+    completedTests.value = '0';
+    pendingTests.value = '0';
+    todayTests.value = '0';
   }
 
   // Update billing statistics based on selected time period
@@ -909,13 +943,13 @@ class LabController extends GetxController {
       }
     } catch (e) {
       print('Error updating billing statistics: $e');
-      // Keep the existing values in case of error
+      // Keep the existing values in case of error, but don't generate mock data
 
-      // Generate fallback chart data if needed
+      // Empty chart data if we have none
       if (revenueData.isEmpty) {
-        revenueData.value = [12000, 18000, 15000, 22000, 19000, 26000, 28000];
-        revenueLabels.value = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-        maxRevenue.value = 30000;
+        revenueData.value = [];
+        revenueLabels.value = [];
+        maxRevenue.value = 1; // Default to avoid division by zero
       }
     }
   }
@@ -973,23 +1007,23 @@ class LabController extends GetxController {
           departments.addAll(referenceDataModel.departments);
         } else {
           print(
-            '[LabController] No departments found, adding mock departments',
+            '[LabController] No departments found from API',
           );
-          _addMockDepartments();
+          // No longer adding mock departments
         }
 
         if (referenceDataModel.agents.isNotEmpty) {
           agents.addAll(referenceDataModel.agents);
         } else {
-          print('[LabController] No agents found, adding mock agents');
-          _addMockAgents();
+          print('[LabController] No agents found from API');
+          // No longer adding mock agents
         }
 
         if (referenceDataModel.doctors.isNotEmpty) {
           doctors.addAll(referenceDataModel.doctors);
         } else {
-          print('[LabController] No doctors found, adding mock doctors');
-          _addMockDoctors();
+          print('[LabController] No doctors found from API');
+          // No longer adding mock doctors
         }
 
         // Store the reference data model
@@ -1022,54 +1056,36 @@ class LabController extends GetxController {
     }
   }
 
-  // Add mock reference data
+  // Add reference data
   void _useMockReferenceData() {
-    print('[LabController] Using mock reference data');
+    print('[LabController] Reference data unavailable from API');
 
     // Clear existing lists
     departments.clear();
     agents.clear();
     doctors.clear();
 
-    // Add "All" options
+    // Add "All" options only
     departments.add(Department(id: 0, departmentName: 'All Departments'));
     agents.add(Agent(id: 0, agentName: 'All Agents'));
     doctors.add(Doctor(id: 0, docName: 'All Doctors'));
 
-    // Add mock data
-    _addMockDepartments();
-    _addMockAgents();
-    _addMockDoctors();
+    // No mock data added - only "All" options will be available
   }
 
   void _addMockDepartments() {
-    departments.addAll([
-      Department(id: 1, departmentName: 'Cardiology'),
-      Department(id: 2, departmentName: 'Neurology'),
-      Department(id: 3, departmentName: 'Orthopedics'),
-      Department(id: 4, departmentName: 'Gastroenterology'),
-      Department(id: 5, departmentName: 'Pediatrics'),
-    ]);
+    // No longer adding mock departments
+    print('[LabController] Not adding mock departments');
   }
 
   void _addMockAgents() {
-    agents.addAll([
-      Agent(id: 1, agentName: 'Agent Smith'),
-      Agent(id: 2, agentName: 'Agent Johnson'),
-      Agent(id: 3, agentName: 'Agent Williams'),
-      Agent(id: 4, agentName: 'Agent Brown'),
-      Agent(id: 5, agentName: 'Agent Davis'),
-    ]);
+    // No longer adding mock agents
+    print('[LabController] Not adding mock agents');
   }
 
   void _addMockDoctors() {
-    doctors.addAll([
-      Doctor(id: 1, docName: 'Dr. John Smith'),
-      Doctor(id: 2, docName: 'Dr. Emily Johnson'),
-      Doctor(id: 3, docName: 'Dr. Michael Williams'),
-      Doctor(id: 4, docName: 'Dr. Sarah Brown'),
-      Doctor(id: 5, docName: 'Dr. David Wilson'),
-    ]);
+    // No longer adding mock doctors
+    print('[LabController] Not adding mock doctors');
   }
 
   // Helper methods to get names by IDs
@@ -1170,24 +1186,57 @@ class LabController extends GetxController {
   }
 
   // Fetch test list by patient ID
-  Future<void> fetchTestList(String billNo) async {
+  Future<void> fetchTestList(String id) async {
     try {
+      print('\n🔍 INVESTIGATION ID CHECK (Lab Controller) 🔍');
+      print('----------------------------------------');
+      print('Investigation ID Value: "$id"');
+      print('Type: ${id.runtimeType}');
+      print('Length: ${id.length}');
+      print('Is Empty?: ${id.isEmpty}');
+      print('Contains Slash?: ${id.contains('/')}');
+      print('----------------------------------------');
+
       isLoadingTests.value = true;
-      final response = await _apiService.get('${ApiConfig.getTestNameById}$billNo');
-      
-      if (response.statusCode == 200 && response.data != null) {
-        final List<dynamic> testData = response.data;
-        testList.value = testData.map((json) => TestModel.fromJson(json)).toList();
+      final endpoint = '${ApiConfig.getTestNameById}$id';
+      print('DEBUG: Making API call to endpoint: $endpoint');
+
+      final response = await _apiService.get(endpoint);
+      print('DEBUG: API Raw Response Type: ${response.runtimeType}');
+      print('DEBUG: API Raw Response: $response');
+      print(endpoint);
+
+      if (response is List) {
+        print('DEBUG: Processing list of ${response.length} tests');
+        print(
+            'DEBUG: First test data: ${response.isNotEmpty ? response.first : 'No data'}');
+
+        testList.value = response.map((json) {
+          print('DEBUG: Processing test JSON: $json');
+          try {
+            final model = TestModel.fromJson(Map<String, dynamic>.from(json));
+            print('DEBUG: Successfully created TestModel: ${model.testName}');
+            return model;
+          } catch (e) {
+            print('DEBUG: Error creating TestModel: $e');
+            rethrow;
+          }
+        }).toList();
+
+        print('DEBUG: Successfully processed ${testList.length} tests');
       } else {
+        print('DEBUG: Unexpected response type: ${response.runtimeType}');
         testList.clear();
-        throw Exception('Failed to load test list');
+        throw Exception('Unexpected response format');
       }
-    } catch (e) {
-      print('Error fetching test list: $e');
+    } catch (e, stackTrace) {
+      print('DEBUG: Error in fetchTestList: $e');
+      print('DEBUG: Stack trace: $stackTrace');
       testList.clear();
       rethrow;
     } finally {
       isLoadingTests.value = false;
+      print('DEBUG: fetchTestList completed. Tests count: ${testList.length}');
     }
   }
 }

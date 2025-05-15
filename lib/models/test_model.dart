@@ -8,9 +8,16 @@ class TestModel {
   });
 
   factory TestModel.fromJson(Map<String, dynamic> json) {
+    print('DEBUG: Creating TestModel from JSON: $json');
+    final testId = json['test_Id'];
+    final testName = json['test_Name'];
+
+    if (testId == null) throw Exception('test_Id is null');
+    if (testName == null) throw Exception('test_Name is null');
+
     return TestModel(
-      testId: json['test_Id'] ?? 0,
-      testName: json['test_Name'] ?? '',
+      testId: testId is int ? testId : int.parse(testId.toString()),
+      testName: testName.toString(),
     );
   }
 

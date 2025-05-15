@@ -253,7 +253,8 @@ class InvestigationItem {
   // Convert to the format expected by the existing UI
   Map<String, dynamic> toDisplayFormat() {
     return {
-      'id': bBillNo ?? id.toString(),
+      'id': id.toString(),
+      'b_BillNo': bBillNo,
       'patientName': bName ?? 'Unknown',
       'patientAge': bAge != null ? int.tryParse(bAge!) ?? 0 : 0,
       'patientSex': bSex ?? 'Unknown',
@@ -272,17 +273,18 @@ class InvestigationItem {
   // Convert status code to readable string
   String getStatusString() {
     // Debug the status code
-    print('Converting status code: $status to string, reportStatus: $reportStatus');
-    
+    print(
+        'Converting status code: $status to string, reportStatus: $reportStatus');
+
     // Status codes based on API documentation (corrected based on testing)
     switch (status) {
-      case 0: 
+      case 0:
         return 'Pending';
-      case 1: 
+      case 1:
         return 'In Progress';
-      case 2: 
+      case 2:
         return 'Completed';
-      case 3: 
+      case 3:
         return 'Canceled';
       default:
         // Check reportStatus as fallback if available
@@ -304,4 +306,4 @@ class InvestigationItem {
         return 'Pending';
     }
   }
-} 
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
 import 'package:medimaster/controllers/lab_transaction_controller.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LabTransactionScreen extends StatelessWidget {
   const LabTransactionScreen({super.key});
@@ -338,7 +339,8 @@ class LabTransactionScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: Colors.indigo.withValues(alpha: 26),
+                                          color: Colors.indigo
+                                              .withValues(alpha: 26),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -450,7 +452,8 @@ class LabTransactionScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: Colors.purple.withValues(alpha: 26),
+                                          color: Colors.purple
+                                              .withValues(alpha: 26),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -1186,7 +1189,8 @@ class LabTransactionScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppConstantColors.labBackground.withValues(alpha: 243),
         border: Border(
-          bottom: BorderSide(color: Colors.green.withValues(alpha: 77), width: 1),
+          bottom:
+              BorderSide(color: Colors.green.withValues(alpha: 77), width: 1),
         ),
       ),
       child: Row(
@@ -1686,6 +1690,12 @@ class LabTransactionScreen extends StatelessWidget {
     required String value,
     required Color iconColor,
   }) {
+    // Check if this is a phone/mobile contact and the value is a valid number
+    bool isPhoneContact = label.toLowerCase() == 'mobile' &&
+        value.isNotEmpty &&
+        value != 'n/a' &&
+        value != 'N/A';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1703,11 +1713,28 @@ class LabTransactionScreen extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Text(
-                value,
-                style: const TextStyle(fontSize: 11),
-                overflow: TextOverflow.ellipsis,
-              ),
+              if (isPhoneContact)
+                InkWell(
+                  onTap: () {
+                    // Use url_launcher to open the dial pad with the phone number
+                    final Uri telUri = Uri(scheme: 'tel', path: value);
+                    launchUrl(telUri);
+                  },
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                ),
             ],
           ),
         ),
