@@ -5,7 +5,7 @@ import 'package:medimaster/constant/app_constant_colors.dart';
 import 'package:medimaster/config/module_config.dart';
 import 'package:medimaster/widgets/qr_scanner_view.dart';
 import 'package:medimaster/widgets/calculator_view.dart';
-import 'auth_controllers/signin_controllers.dart';
+import 'AUTH/signin_controllers.dart';
 
 class MainController extends GetxController {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();

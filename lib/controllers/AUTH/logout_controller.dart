@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import '../../controllers/main_controller.dart';
+import '../main_controller.dart';
 
 class LogoutController extends GetxController {
   void logout() {

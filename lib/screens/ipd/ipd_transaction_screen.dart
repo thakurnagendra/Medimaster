@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
-import 'package:medimaster/controllers/ipd_controllers/ipd_transaction_controller.dart';
+import 'package:medimaster/controllers/IPD/ipd_transaction_controller.dart';
 
 class IpdTransactionScreen extends GetView<IpdTransactionController> {
   @override

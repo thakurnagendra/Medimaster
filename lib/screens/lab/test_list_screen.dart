@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:medimaster/controllers/lab_controller.dart';
+import 'package:medimaster/controllers/LAB/lab_controller.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
 
 class TestListScreen extends StatelessWidget {

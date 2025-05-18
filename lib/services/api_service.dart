@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../config/api_config.dart';
-import '../controllers/auth_controllers/signin_controllers.dart';
+import '../controllers/AUTH/signin_controllers.dart';
 import '../utils/jwt_util.dart';
 
 class ApiService {

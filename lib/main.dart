@@ -5,7 +5,7 @@ import 'package:medimaster/bindings/lab_bindings.dart';
 import 'package:medimaster/controllers/main_controller.dart';
 import 'package:medimaster/screens/main_screen.dart';
 import 'screens/login_screen.dart';
-import 'package:medimaster/controllers/auth_controllers/signin_controllers.dart';
+import 'package:medimaster/controllers/AUTH/signin_controllers.dart';
 import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/services/connectivity_service.dart';
 import 'package:medimaster/services/back_button_service.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/services.dart';
-import 'package:medimaster/controllers/auth_controllers/logout_controller.dart';
+import 'package:medimaster/controllers/AUTH/logout_controller.dart';
 import '../../../config/api_config.dart';
 import '../../../services/api_service.dart';
 import '../main_controller.dart'; // Import MainController for company management

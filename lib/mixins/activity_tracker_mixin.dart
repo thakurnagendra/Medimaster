@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controllers/signin_controllers.dart';
+import '../controllers/AUTH/signin_controllers.dart';
 
 mixin ActivityTrackerMixin<T extends StatefulWidget> on State<T> {
   @override

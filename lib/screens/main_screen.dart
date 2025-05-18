@@ -10,7 +10,7 @@ import 'package:medimaster/widgets/buttom_navigation_bar.dart';
 import 'package:medimaster/widgets/top_app_bar.dart';
 import 'package:medimaster/widgets/app_drawer.dart';
 import 'package:medimaster/widgets/activity_tracker.dart';
-import 'package:medimaster/controllers/auth_controllers/signin_controllers.dart';
+import 'package:medimaster/controllers/AUTH/signin_controllers.dart';
 import 'package:medimaster/services/back_button_service.dart';
 
 // Import all the separate screen components

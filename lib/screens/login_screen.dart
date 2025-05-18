@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:medimaster/controllers/auth_controllers/signin_controllers.dart';
+import 'package:medimaster/controllers/AUTH/signin_controllers.dart';
 import 'package:get_storage/get_storage.dart';
 
 class LoginScreen extends StatefulWidget {

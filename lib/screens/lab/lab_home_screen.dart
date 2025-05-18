@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
 import 'package:medimaster/controllers/main_controller.dart';
-import 'package:medimaster/controllers/lab_controller.dart';
+import 'package:medimaster/controllers/LAB/lab_controller.dart';
 import 'package:medimaster/widgets/welcome_card.dart';
 import 'package:medimaster/screens/lab/lab_recent_tests_screen.dart';
 import 'package:medimaster/services/api_service.dart';
@@ -14,7 +14,6 @@ import 'package:medimaster/services/report_service.dart';
 import 'package:medimaster/utils/logger.dart';
 import 'package:medimaster/screens/lab/test_list_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart';
 
 class LabHomeScreen extends StatelessWidget {
   const LabHomeScreen({super.key});

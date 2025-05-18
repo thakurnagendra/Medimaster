@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:medimaster/controllers/auth_controllers/signin_controllers.dart';
+import 'package:medimaster/controllers/AUTH/signin_controllers.dart';
 
 /// A widget that listens for user interactions and updates the activity timestamp
 /// to prevent automatic logout due to inactivity
