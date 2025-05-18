@@ -309,8 +309,7 @@ class _LabReportMenuCreditListScreenState
                       InkWell(
                         onTap: () {
                           // Use url_launcher to open the dial pad with the phone number
-                          if (credit.pMobile != null &&
-                              credit.pMobile!.isNotEmpty) {
+                          if (credit.pMobile.isNotEmpty) {
                             final Uri telUri =
                                 Uri(scheme: 'tel', path: credit.pMobile);
                             launchUrl(telUri);

@@ -1722,7 +1722,7 @@ class LabTransactionScreen extends StatelessWidget {
                   },
                   child: Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       color: Colors.blue,
                     ),
@@ -1752,21 +1752,21 @@ class LabTransactionScreen extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 26),
-          borderRadius: BorderRadius.circular(12),
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 12),
-            const SizedBox(width: 4),
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: FontWeight.w500,
               ),
             ),

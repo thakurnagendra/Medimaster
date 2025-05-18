@@ -1053,8 +1053,8 @@ class LabHomeScreen extends StatelessWidget {
                                                           Colors.red[100],
                                                       colorText:
                                                           Colors.red[900],
-                                                      duration:
-                                                          Duration(seconds: 5),
+                                                      duration: const Duration(
+                                                          seconds: 5),
                                                     );
                                                   }
                                                 } else {
@@ -1139,7 +1139,18 @@ class LabHomeScreen extends StatelessWidget {
                                             label: 'Notify',
                                             color: Colors.amber,
                                             onTap: () {
-                                              // Notify by system action
+                                              // Show the notify dialog
+                                              Get.dialog(
+                                                Dialog(
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                  ),
+                                                  child: NotifyDialog(
+                                                      testData: test),
+                                                ),
+                                              );
                                             },
                                           ),
                                           _buildActionButton(
@@ -1224,7 +1235,7 @@ class LabHomeScreen extends StatelessWidget {
                   },
                   child: Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       color: Colors.blue,
                     ),
@@ -1831,6 +1842,446 @@ class _SendReportDialogState extends State<SendReportDialog> {
       _showSnackbar(
         'Error',
         'Failed to send report: ${e.toString()}',
+        true,
+      );
+    }
+  }
+}
+
+class NotifyDialog extends StatefulWidget {
+  final Map<String, dynamic> testData;
+
+  const NotifyDialog({Key? key, required this.testData}) : super(key: key);
+
+  @override
+  State<NotifyDialog> createState() => _NotifyDialogState();
+}
+
+class _NotifyDialogState extends State<NotifyDialog> {
+  // Selected method (WhatsApp, SMS, Email)
+  String selectedMethod = 'WhatsApp';
+
+  // Recipients selection states
+  bool notifyPatient = false;
+  bool notifyDoctor = false;
+  bool notifyClient = false;
+
+  // Track if dropdown is expanded
+  bool isDropdownExpanded = false;
+
+  // Loading state
+  bool isLoading = false;
+
+  // Controllers for input fields
+  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
+
+  @override
+  void dispose() {
+    phoneController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // Dismiss keyboard when tapping outside of text fields
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppConstantColors.labBackground,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        // Make the entire dialog scrollable to fix overflow issues
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              const Center(
+                child: Text(
+                  'Send Notification',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // WhatsApp, SMS, Email options in horizontal row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildMethodOption('WhatsApp', Icons.message, Colors.green),
+                  _buildMethodOption('SMS', Icons.sms, Colors.purple),
+                  _buildMethodOption('Email', Icons.email, Colors.blue),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Phone number input for WhatsApp and SMS
+              if (selectedMethod == 'WhatsApp' || selectedMethod == 'SMS')
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: TextField(
+                    controller: phoneController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter phone number',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      border: InputBorder.none,
+                      prefixIcon: Icon(
+                        Icons.phone,
+                        color: selectedMethod == 'WhatsApp'
+                            ? Colors.green
+                            : Colors.purple,
+                      ),
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                    ),
+                    keyboardType: TextInputType.phone,
+                    autocorrect: false,
+                    autofillHints: null,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ),
+
+              // Email input for Email
+              if (selectedMethod == 'Email')
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: TextField(
+                    controller: emailController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter email address',
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      border: InputBorder.none,
+                      prefixIcon: Icon(
+                        Icons.email,
+                        color: Colors.blue,
+                      ),
+                      hintStyle: TextStyle(color: Color(0xFFAAAAAA)),
+                    ),
+                    style: const TextStyle(color: Colors.black87),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    autofillHints: const [AutofillHints.email],
+                    autocorrect: false,
+                    enableSuggestions: true,
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+
+              // Dropdown header
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    isDropdownExpanded = !isDropdownExpanded;
+                  });
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Select Recipient',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Icon(
+                        isDropdownExpanded
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        color: Colors.grey[700],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Dropdown content
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: isDropdownExpanded ? 60 : 0,
+                curve: Curves.easeInOut,
+                child: Container(
+                  color: Colors.white,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildRecipientCheckbox(
+                          'Notify Patient',
+                          'Patient: ${widget.testData['patientName'] ?? widget.testData['b_Name'] ?? 'Unknown'}',
+                          notifyPatient,
+                          (value) =>
+                              setState(() => notifyPatient = value ?? false),
+                          Colors.blue,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Action buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: isLoading ? null : () => Get.back(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      disabledForegroundColor: Colors.grey[400],
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                          color:
+                              isLoading ? Colors.grey[400] : Colors.grey[700]),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            // Implement notify functionality
+                            _sendNotification();
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[300],
+                      disabledForegroundColor: Colors.grey[500],
+                    ),
+                    child: isLoading
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white.withOpacity(0.8)),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Sending...'),
+                            ],
+                          )
+                        : const Text('Send'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMethodOption(String method, IconData icon, Color color) {
+    final bool isSelected = selectedMethod == method;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          selectedMethod = method;
+        });
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? color.withOpacity(0.2) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected
+                  ? Border.all(color: color, width: 2)
+                  : Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? color : Colors.grey[600],
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            method,
+            style: TextStyle(
+              color: isSelected ? color : Colors.grey[800],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecipientCheckbox(
+    String title,
+    String subtitle,
+    bool value,
+    ValueChanged<bool?> onChanged,
+    Color checkboxColor,
+  ) {
+    return CheckboxListTile(
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 12),
+        overflow: TextOverflow.ellipsis,
+      ),
+      value: value,
+      onChanged: onChanged,
+      dense: true,
+      controlAffinity: ListTileControlAffinity.leading,
+      activeColor: checkboxColor,
+    );
+  }
+
+  // Helper to show snackbar and hide keyboard
+  void _showSnackbar(String title, String message, bool isError) {
+    // Hide keyboard
+    FocusScope.of(context).unfocus();
+
+    // Show snackbar
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: isError ? Colors.red[100] : Colors.green[100],
+      colorText: isError ? Colors.red[900] : Colors.green[800],
+      duration: Duration(seconds: isError ? 5 : 3),
+    );
+  }
+
+  void _sendNotification() async {
+    // Hide keyboard if it's currently showing
+    FocusScope.of(context).unfocus();
+
+    // Validate recipient based on method
+    if ((selectedMethod == 'WhatsApp' || selectedMethod == 'SMS') &&
+        phoneController.text.trim().isEmpty &&
+        !notifyPatient) {
+      _showSnackbar(
+        'Error',
+        'Please enter a phone number or select patient as recipient',
+        true,
+      );
+      return;
+    }
+
+    if (selectedMethod == 'Email' &&
+        emailController.text.trim().isEmpty &&
+        !notifyPatient) {
+      _showSnackbar(
+        'Error',
+        'Please enter an email address or select patient as recipient',
+        true,
+      );
+      return;
+    }
+
+    // Set loading state to true
+    setState(() {
+      isLoading = true;
+    });
+
+    // Show loading indicator
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: Container(
+          color: Colors.transparent,
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.3),
+    );
+
+    try {
+      // Simulate API call with a delay
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Close loading dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      // Update loading state
+      setState(() {
+        isLoading = false;
+      });
+
+      // Add a delay to ensure the loading dialog is fully closed
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // Show success message
+      _showSnackbar(
+        'Notification Sent',
+        'Test results notification sent successfully via $selectedMethod',
+        false,
+      );
+
+      // Give time for the snackbar to appear before closing the dialog
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Close the notify dialog
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Ensure loading dialog is closed in case of error
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      // Update loading state
+      setState(() {
+        isLoading = false;
+      });
+
+      // Show error message
+      _showSnackbar(
+        'Error',
+        'Failed to send notification: ${e.toString()}',
         true,
       );
     }
