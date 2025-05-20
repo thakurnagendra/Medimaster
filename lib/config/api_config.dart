@@ -11,6 +11,7 @@ class ApiConfig {
   // Investigation endpoints
   static const String getInvestigationList =
       '/Investigation/GetInvestigationList';
+  static const String testList = '/Investigation/TestList';
 
   // Reference data endpoints
   static const String getReferenceData = '/Reference/GetReferenceData';
