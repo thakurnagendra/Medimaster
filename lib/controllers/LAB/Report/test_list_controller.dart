@@ -69,8 +69,9 @@ class TestListController extends GetxController {
       // Extract unique test groups from the fetched list
       final groups = <String>{'All Test Groups'};
       for (final t in testList) {
-        if (t.category != null && t.category!.isNotEmpty)
+        if (t.category != null && t.category!.isNotEmpty) {
           groups.add(t.category!);
+        }
       }
       testGroups.assignAll(groups);
     } catch (e) {

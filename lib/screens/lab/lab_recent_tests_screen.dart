@@ -9,7 +9,7 @@ import 'package:medimaster/services/api_service.dart';
 import 'package:medimaster/utils/pdf_viewer_util.dart';
 import 'package:medimaster/models/send_report_model.dart';
 import 'package:medimaster/services/report_service.dart';
-import 'package:medimaster/screens/lab/test_list_screen.dart';
+import 'package:medimaster/screens/lab/view_test_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:medimaster/utils/logger.dart';
 import 'package:flutter/services.dart';
@@ -681,9 +681,10 @@ class _LabRecentTestsScreenState extends State<LabRecentTestsScreen> {
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isExpanded ? 0.08 : 0.04),
-              blurRadius: isExpanded ? 5 : 2,
-              spreadRadius: isExpanded ? 1 : 0,
+              color: Colors.black.withOpacity(isExpanded ? 0.15 : 0.1),
+              blurRadius: isExpanded ? 8 : 6,
+              spreadRadius: isExpanded ? 2 : 1,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -1011,8 +1012,9 @@ class _LabRecentTestsScreenState extends State<LabRecentTestsScreen> {
 
                                 Get.to(() => TestListScreen(
                                       investigationId: numericId,
-                                      patientName:
-                                          test['patientName'] ?? 'Unknown',
+                                      patientName: test['patientName'] ??
+                                          test['b_Name'] ??
+                                          'Unknown',
                                     ));
                               },
                             ),

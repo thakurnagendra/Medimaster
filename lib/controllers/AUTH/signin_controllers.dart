@@ -72,8 +72,13 @@ class SignInController extends GetxController {
 
   void _setDefaultValues() {
     Future.microtask(() {
-      usernameController.text = 'demo';
-      passwordController.text = 'Test@1235';
+      // Get saved credentials from storage
+      final savedUsername = storage.read<String>('lastUsername');
+      final savedPassword = storage.read<String>('lastPassword');
+
+      // Set the text controllers with saved values if they exist
+      usernameController.text = savedUsername ?? '';
+      passwordController.text = savedPassword ?? '';
     });
   }
 
@@ -203,6 +208,20 @@ class SignInController extends GetxController {
         if (refreshToken.isNotEmpty) {
           print('Refresh token received, length: ${refreshToken.length}');
         }
+
+        // Check if this is a different user than the last login
+        final lastUsername = storage.read<String>('lastUsername');
+        if (lastUsername != null && lastUsername != username) {
+          // Clear previous credentials if it's a different user
+          storage.remove('lastUsername');
+          storage.remove('lastPassword');
+          print('Cleared previous user credentials');
+        }
+
+        // Save new credentials
+        storage.write('lastUsername', username);
+        storage.write('lastPassword', password);
+        print('Saved new user credentials');
 
         // Save token to storage FIRST
         await _saveSessionAsync(token, username, refreshToken);

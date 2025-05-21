@@ -22,12 +22,12 @@ class LabReportMenuTestListScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         titleTextStyle: const TextStyle(
-            color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+            color: Colors.black, fontWeight: FontWeight.bold, fontSize: 23),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -194,7 +194,7 @@ class LabReportMenuTestListScreen extends StatelessWidget {
                                       children: [
                                         Row(
                                           children: [
-                                            Icon(
+                                            const Icon(
                                               Icons.category,
                                               size: 15,
                                               color: Colors.blue,
@@ -214,7 +214,7 @@ class LabReportMenuTestListScreen extends StatelessWidget {
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            Icon(
+                                            const Icon(
                                               Icons.add_box_rounded,
                                               size: 15,
                                               color: Colors.green,

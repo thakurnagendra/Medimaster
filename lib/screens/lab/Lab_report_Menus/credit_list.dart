@@ -59,6 +59,10 @@ class _LabReportMenuCreditListScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstantColors.labBackground,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

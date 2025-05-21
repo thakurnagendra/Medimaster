@@ -1280,12 +1280,14 @@ class LabTransactionScreen extends StatelessWidget {
         curve: Curves.easeInOut,
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isExpanded ? 0.08 : 0.04),
-              blurRadius: isExpanded ? 5 : 2,
-              spreadRadius: isExpanded ? 1 : 0,
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6,
+              spreadRadius: 1,
+              offset: const Offset(0, 3),
             ),
           ],
         ),

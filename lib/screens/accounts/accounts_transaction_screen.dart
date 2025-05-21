@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:medimaster/screens/accounts/agent_wise_summary_screen.dart';
 import 'package:medimaster/constant/app_constant_colors.dart';
+import 'package:medimaster/screens/lab/Lab_report_Menus/agent_wise_billing_and_summary/agent_wise_summary_screen.dart';
 
 class AccountsTransactionScreen extends StatelessWidget {
   const AccountsTransactionScreen({super.key});

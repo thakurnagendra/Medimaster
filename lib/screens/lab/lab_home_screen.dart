@@ -12,7 +12,7 @@ import 'package:medimaster/utils/pdf_viewer_util.dart';
 import 'package:medimaster/models/send_report_model.dart';
 import 'package:medimaster/services/report_service.dart';
 import 'package:medimaster/utils/logger.dart';
-import 'package:medimaster/screens/lab/test_list_screen.dart';
+import 'package:medimaster/screens/lab/view_test_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LabHomeScreen extends StatelessWidget {
@@ -1014,8 +1014,10 @@ class LabHomeScreen extends StatelessWidget {
 
                                             Get.to(() => TestListScreen(
                                                   investigationId: numericId,
-                                                  patientName: test['b_Name'] ??
-                                                      'Unknown',
+                                                  patientName:
+                                                      test['patientName'] ??
+                                                          test['b_Name'] ??
+                                                          'Unknown',
                                                 ));
                                           },
                                         ),

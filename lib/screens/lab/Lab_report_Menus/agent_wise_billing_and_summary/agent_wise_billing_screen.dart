@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer' as developer;
 import 'package:medimaster/constant/app_constant_colors.dart';
-import 'package:medimaster/models/agent_billing_summary_model.dart';
+import 'package:medimaster/models/agent_wise_billing_model.dart';
 import 'package:medimaster/services/agent_billing_summary_service.dart';
 import 'package:medimaster/config/api_config.dart';
 import 'package:intl/intl.dart';
@@ -48,6 +48,10 @@ class _AgentWiseBillingScreenState extends State<AgentWiseBillingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstantColors.labBackground,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +267,7 @@ class _AgentWiseBillingScreenState extends State<AgentWiseBillingScreen> {
                     border: Border.all(color: Colors.grey[300]!, width: 0.5),
                   ),
                   child: Text(
-                    '#${billing.bBillNo}',
+                    'Bill #${billing.bBillNo}',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[800],

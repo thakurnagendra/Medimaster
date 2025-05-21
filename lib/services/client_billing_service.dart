@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:medimaster/config/api_config.dart';
-import 'package:medimaster/models/client_billing_detail_model.dart';
+import 'package:medimaster/models/agent_wise_summary_model.dart';
 
 class ClientBillingService {
   final Dio _dio;
@@ -21,7 +21,9 @@ class ClientBillingService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? [];
-        return data.map((item) => ClientBillingDetailModel.fromJson(item)).toList();
+        return data
+            .map((item) => ClientBillingDetailModel.fromJson(item))
+            .toList();
       }
 
       // Return empty list if response status is not 200
@@ -96,4 +98,4 @@ class ClientBillingService {
       ),
     ];
   }
-} 
+}

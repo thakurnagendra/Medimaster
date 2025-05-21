@@ -37,16 +37,16 @@ class ClientBillingDetailModel {
 
   factory ClientBillingDetailModel.fromJson(Map<String, dynamic> json) {
     return ClientBillingDetailModel(
-      billNo: json['billNo'] ?? '',
+      billNo: json['bill_No'] ?? '',
       date: json['date'] ?? '',
       miti: json['miti'] ?? '',
-      patientName: json['patientName'] ?? '',
-      patientId: json['patientId'] ?? '',
+      patientName: json['patient_Name'] ?? '',
+      patientId: json['patient_Id'] ?? '',
       mobileNo: json['mobileNo'],
       age: json['age']?.toString() ?? '',
       sex: json['sex'] ?? '',
       agentName: json['agentName'] ?? '',
-      departmentName: json['departmentName'] ?? '',
+      departmentName: json['department_Name'] ?? '',
       referdBy: json['referdBy'] ?? '',
       products: json['products'] ?? '',
       basicAmt: (json['basicAmt'] as num?)?.toDouble() ?? 0.0,
@@ -58,16 +58,16 @@ class ClientBillingDetailModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'billNo': billNo,
+      'bill_No': billNo,
       'date': date,
       'miti': miti,
-      'patientName': patientName,
-      'patientId': patientId,
+      'patient_Name': patientName,
+      'patient_Id': patientId,
       'mobileNo': mobileNo,
       'age': age,
       'sex': sex,
       'agentName': agentName,
-      'departmentName': departmentName,
+      'department_Name': departmentName,
       'referdBy': referdBy,
       'products': products,
       'basicAmt': basicAmt,
@@ -76,4 +76,4 @@ class ClientBillingDetailModel {
       'recieptAmt': recieptAmt,
     };
   }
-} 
+}
