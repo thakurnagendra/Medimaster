@@ -105,6 +105,23 @@ class LabReportScreen extends StatelessWidget {
     required Color color,
     required String count,
   }) {
+    // Get device screen size
+    final Size screenSize = MediaQuery.of(Get.context!).size;
+    final bool isSmallScreen = screenSize.width < 360;
+    final bool isMediumScreen =
+        screenSize.width >= 360 && screenSize.width < 600;
+
+    // Calculate responsive sizes
+    final double iconSize = isSmallScreen ? 20 : (isMediumScreen ? 22 : 24);
+    final double iconPadding = isSmallScreen ? 8 : (isMediumScreen ? 9 : 10);
+    final double titleFontSize =
+        isSmallScreen ? 11 : (isMediumScreen ? 12 : 13);
+    final double countFontSize = isSmallScreen ? 9 : (isMediumScreen ? 10 : 11);
+    final double verticalPadding =
+        isSmallScreen ? 10 : (isMediumScreen ? 11 : 12);
+    final double horizontalPadding =
+        isSmallScreen ? 6 : (isMediumScreen ? 7 : 8);
+
     return InkWell(
       onTap: () {
         // Navigate to the appropriate screen based on the category
@@ -112,11 +129,14 @@ class LabReportScreen extends StatelessWidget {
           Get.to(() => const LabRecentTestsScreen());
         } else if (title == 'Billing') {
           // Navigate to Billing/Transaction screen
-          Get.to(() => const LabTransactionScreen());
+          Get.to(() => const LabTransactionScreen(showBackButton: true));
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -134,30 +154,34 @@ class LabReportScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(iconPadding),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(
+                icon,
+                color: color,
+                size: iconSize,
+              ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isSmallScreen ? 6 : 8),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: titleFontSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: isSmallScreen ? 1 : 2),
             Text(
               '$count reports',
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 10,
+                fontSize: countFontSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,

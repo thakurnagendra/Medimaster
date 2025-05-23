@@ -5,7 +5,12 @@ import 'package:medimaster/controllers/lab_transaction_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LabTransactionScreen extends StatelessWidget {
-  const LabTransactionScreen({super.key});
+  final bool showBackButton;
+
+  const LabTransactionScreen({
+    super.key,
+    this.showBackButton = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +25,16 @@ class LabTransactionScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppConstantColors.labBackground,
+      appBar: showBackButton
+          ? AppBar(
+              backgroundColor: AppConstantColors.labBackground,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                onPressed: () => Get.back(),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

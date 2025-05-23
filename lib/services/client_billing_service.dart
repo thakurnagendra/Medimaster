@@ -46,7 +46,7 @@ class ClientBillingService {
         billNo: 'BILL-001',
         date: '2023-04-15',
         miti: '2080-01-02',
-        patientName: 'John Doe',
+        patientName: 'MediMaster',
         patientId: 'PAT-1234',
         mobileNo: '9876543210',
         age: '35',

@@ -172,7 +172,7 @@ class AlertsScreen extends StatelessWidget {
             ),
             _alertItem(
               'Warning',
-              'Patient John Doe missed appointment',
+              'Patient MediMaster missed appointment',
               '1 hour ago',
               Colors.orange,
             ),

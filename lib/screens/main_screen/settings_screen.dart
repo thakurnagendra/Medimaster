@@ -111,7 +111,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'John Doe',
+              'MediMaster',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const Text('Administrator', style: TextStyle(color: Colors.grey)),

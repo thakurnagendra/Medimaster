@@ -1,6 +1,6 @@
 class ApiConfig {
   // Use UAT environment
-  static const String baseUrl = 'https://uat.medimastererp.com/api/mobileapp';
+  static const String baseUrl = 'https://medimastererp.com/api/mobileapp';
   // For production use:
   // static const String baseUrl = 'https://medimastererp.com/api/mobileapp';
 

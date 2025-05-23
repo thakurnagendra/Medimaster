@@ -18,7 +18,6 @@ import 'package:medimaster/screens/main_screen/finance_chart_screen.dart';
 import 'package:medimaster/screens/main_screen/transactions_screen.dart';
 import 'package:medimaster/screens/main_screen/reports_screen.dart';
 import 'package:medimaster/screens/main_screen/settings_screen.dart';
-import 'package:medimaster/screens/main_screen/billing_chart_screen.dart';
 
 // Import module-specific screens
 import 'package:medimaster/screens/lab/lab_home_screen.dart';
@@ -99,8 +98,7 @@ class ModuleScreenFactory {
       case 'accounts':
         screen = const AccountsHomeScreen();
         break;
-      case 'billing':
-        screen = BillingChartScreen();
+
         break;
       default:
         screen = FinanceChartScreen();
